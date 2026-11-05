@@ -15,7 +15,7 @@ Use Node.js, npm, and Python 3.
 - `npm run check`: run Node syntax checks on application modules.
 - `npm test`: run interaction, floor, parking, and transition checks.
 
-There is no build step. Browsers load the committed local Three.js modules through the import map in `dist/index.html`.
+The main cockpit needs no build step. After editing `dist/agent/src/campus3d.js` or its shared imports, run `npm run build:agent` and commit the refreshed bundle. Browsers load the committed local Three.js modules through the import map in `dist/index.html`.
 
 ## Coding Style & Naming Conventions
 

@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+const html=readFileSync(new URL('../dist/agent/index.html',import.meta.url),'utf8');
+const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
+new vm.Script(script);
+const ids=vm.createContext({alerts:[{id:'A-1042'},{id:'A-1045'}]});
+vm.runInContext(script.match(/function nextAlertId\(\)\{[^\n]+/)[0],ids);
+for(let i=0;i<3;i++)vm.runInContext('alerts.push({id:nextAlertId()})',ids);
+assert.equal(vm.runInContext('new Set(alerts.map(a=>a.id)).size===alerts.length',ids),true);
+assert.equal(vm.runInContext('alerts.at(-1).id',ids),'A-1048');
+const nodes={};
+const context=vm.createContext({$:selector=>nodes[selector]??={}});
+vm.runInContext(script.slice(script.indexOf('const HZC='),script.indexOf('/* ---------- capability view')),context);
+vm.runInContext('renderHz()',context);
+assert.match(nodes['#hzsum'].innerHTML,/23\.6 L \/ 2\.4 kg/);
+assert.doesNotMatch(nodes['#hzsum'].innerHTML,/L\/kg/);
+console.log('PASS: agent inline syntax, unique event IDs across repeats/injection, separate volume and mass totals');

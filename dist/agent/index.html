@@ -923,9 +923,10 @@ function falseById(id){markFalse(alerts.find(a=>a.id===id));closeDrawer()}
 function upgrade(id){toast('已通知医务科 + 法务值班 + 院内警务室，录音录像留证开启','red');closeDrawer()}
 
 /* ---------- demo: riot closed loop ---------- */
+function nextAlertId(){return 'A-'+(Math.max(1042,...alerts.map(a=>Number(a.id.slice(2))||0))+1)}
 $('#demo').onclick=function(){
   this.disabled=true;switchView('sec');closeDrawer();if($('#map').classList.contains('flat'))$('#mflat').click();
-  const a={id:'A-1043',type:'riot',lv:2,t:now(),title:'医闹预警 · Ⅰ 级布控',bld:2,loc:'2号楼 急诊 · 东门',st:'watch',fresh:true,conf:.72,
+  const a={id:nextAlertId(),type:'riot',lv:2,t:now(),title:'医闹预警 · Ⅰ 级布控',bld:2,loc:'2号楼 急诊 · 东门',st:'watch',fresh:true,conf:.72,
    ai:'纠纷 #2026-187 家属 4 人从东门进入，命中院内布控名单（省级库未命中）；手持折叠物品，疑似横幅。建议提前布控。',
    src:['东门摄像头 YC-CAM-205','院内布控名单','省级风险库','医务科纠纷登记'],
    ev:[['急诊东门 · 名单命中 4 人','20%,25%,45%,60%'],['手持物 · 疑似横幅','55%,30%,25%,45%']],
@@ -1010,9 +1011,9 @@ const HZ=[
 let hzSel=0;
 const HZST={ok:['正常','grn'],warn:['开柜未登记','red'],mismatch:['库存不符','org'],late:['盘点逾期','org']};
 function renderHz(){
-  const sum={};for(const k in HZC)sum[k]={items:0,depts:new Set(),qty:0};
-  HZ.forEach(d=>d.items.forEach(it=>it.c.forEach(c=>{sum[c].items++;sum[c].depts.add(d.dept);sum[c].qty+=it.stock})));
-  $('#hzsum').innerHTML=Object.keys(HZC).map(k=>`<div class="hzc" style="--c:${HZC[k][1]}"><small>${HZC[k][0]}</small><b>${sum[k].items}<i>品种 · ${sum[k].depts.size} 科室</i></b><em>当前库存 ${sum[k].qty.toFixed(1)} L/kg · 本月盘点 ${k==='ran'?'5/6':'6/6'}</em></div>`).join('');
+  const sum={};for(const k in HZC)sum[k]={items:0,depts:new Set(),qty:{}};
+  HZ.forEach(d=>d.items.forEach(it=>it.c.forEach(c=>{sum[c].items++;sum[c].depts.add(d.dept);sum[c].qty[it.u]=(sum[c].qty[it.u]||0)+it.stock})));
+  $('#hzsum').innerHTML=Object.keys(HZC).map(k=>`<div class="hzc" style="--c:${HZC[k][1]}"><small>${HZC[k][0]}</small><b>${sum[k].items}<i>品种 · ${sum[k].depts.size} 科室</i></b><em>当前库存 ${Object.entries(sum[k].qty).map(([u,v])=>v.toFixed(1)+' '+u).join(' / ')} · 本月盘点 ${k==='ran'?'5/6':'6/6'}</em></div>`).join('');
   const AL=[['','病理科 · 开柜未登记','今 06:12 王** 开柜 48 s，无领用登记，二甲苯推算差 5 L，录像已截取',0,'紧急'],['org','药剂科 · 库存与采购不符','乙醇 95% 台账 94 L vs 推算 112 L，差 18 L，疑似分装未登记',2,'重要'],['org','手术室 · 月末盘点逾期','10 月盘点逾期 5 天未提交',5,'重要']];
   $('#hzalerts').innerHTML=AL.map(a=>`<div class="al" onclick="hzPick(${a[3]})"><div class="top"><span class="lvp ${a[0]}">${a[4]}</span></div><div class="ttl">${a[1]}</div><div class="ai-line">${a[2]}</div></div>`).join('');
   $('#hztable').innerHTML=`<thead><tr><th>科室</th><th>品名 · 类别</th><th style="text-align:right">本月入库</th><th style="text-align:right">本月领用</th><th style="text-align:right">台账库存</th><th>存放</th><th>最近开柜</th><th>状态</th></tr></thead><tbody>`+HZ.map((d,i)=>d.items.map((it,j)=>`<tr class="dept${i===hzSel?' sel':''}" onclick="hzPick(${i})">${j===0?`<td rowspan="${d.items.length}"><b>${d.dept}</b><br><small>${d.bld}</small></td>`:''}<td>${it.n}<br>${it.c.map(c=>`<span class="cls ${c}">${HZC[c][0]}</span>`).join('')}</td><td class="n">${it.in} ${it.u}</td><td class="n">${it.use} ${it.u}</td><td class="n ${it.calc!==it.stock?'lo':''}">${it.stock} ${it.u}${it.calc!==it.stock?`<br><small>推算 ${it.calc}</small>`:''}</td>${j===0?`<td rowspan="${d.items.length}" style="font-size:11px;color:#8c9cb3">${d.cab}</td><td rowspan="${d.items.length}" style="font-size:11px;color:#8c9cb3">${d.last}</td><td rowspan="${d.items.length}"><span class="tag ${HZST[d.st][1]}">${HZST[d.st][0]}</span></td>`:''}</tr>`).join('')).join('')+'</tbody>';
@@ -1064,7 +1065,7 @@ $$('.navitem').forEach(b=>b.onclick=()=>switchView(b.dataset.v));
 const LIVE=[{type:'park',lv:1,title:'急诊临时车位将满',bld:'PS',loc:'地面 · 急诊临时停车',ai:'急诊临时车位 44/46，预计 12 分钟后满位，建议提前诱导。',conf:.8,src:['车位检测器','道闸'],ev:[['急诊临时 · 44/46','10%,30%,70%,50%'],['入口排队 2 车','20%,30%,50%,40%']],why:['占用 ≥ 95%'],do:['入口诱导至地面东侧'],},
  {type:'susp',lv:2,title:'夜间病区徘徊（回放核验）',bld:6,loc:'6号楼 12F 走廊',ai:'非探视时段 1 人在 12F 走廊往返 4 次、尝试 2 扇病房门，无住院/陪护记录。',conf:.76,src:['走廊摄像头','陪护登记'],ev:[['12F 走廊 · 往返','20%,30%,50%,50%'],['尝试病房门','45%,25%,25%,55%']],why:['非探视时段','无陪护登记'],do:['护士站 + 保安核查'],}];
 let li=0;
-setInterval(()=>{if(li>=LIVE.length)return;const b=LIVE[li++];const a={id:'A-'+(1044+li),t:now(),st:'pending',fresh:true,tl:[['发现',now(),'AI'],['研判',now(),'置信 '+Math.round(b.conf*100)+'%'],['派单','','—'],['到场','','—'],['闭环','','—']],cur:2,...b};alerts.unshift(a);renderAlerts();renderMap();toast('新预警：'+a.title+' · '+a.loc,a.lv===2?'org':'cy')},38000);
+setInterval(()=>{if(li>=LIVE.length)return;const b=LIVE[li++];const a={id:nextAlertId(),t:now(),st:'pending',fresh:true,tl:[['发现',now(),'AI'],['研判',now(),'置信 '+Math.round(b.conf*100)+'%'],['派单','','—'],['到场','','—'],['闭环','','—']],cur:2,...b};alerts.unshift(a);renderAlerts();renderMap();toast('新预警：'+a.title+' · '+a.loc,a.lv===2?'org':'cy')},38000);
 
 /* ---------- init ---------- */
 fit();init3D();renderAlerts();renderMap();renderTL();renderScenes();renderSugs();renderSignals();renderHz();renderCap();
