@@ -15,4 +15,6 @@ assert.equal(filterParking(slots,{zone:'A',level:'1'}).length,0);
 for(const s of filterParking(slots,{zone:'M',status:'free',level:'1'}))assert(s.zone==='M'&&!s.occupied&&s.level===1);
 const before=parkingStats(slots);slots[0].occupied=false;const after=parkingStats(slots);assert.equal(after.free,before.free+1);assert.equal(after.occupied,before.occupied-1);assert.equal(after.free+after.occupied,700);
 assert.equal(createParkingInventory()[0].occupied,true,'Demo changes must not mutate initial inventory');
+assert.equal(parkingStats(createParkingInventory(()=>true)).occupied,700,'Custom occupancy function is applied');
+assert.equal(parkingStats(createParkingInventory((s)=>s.kind==='standard')).occupied,500,'Custom occupancy receives slot');
 console.log('PASS: 700 unique slots, 500 standard + 100 two-level pairs, occupancy totals, combined filters, independent state updates');

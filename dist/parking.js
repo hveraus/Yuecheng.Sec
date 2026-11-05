@@ -1,18 +1,18 @@
 import * as THREE from 'three';
 
-export function createParkingInventory(){
+export function createParkingInventory(occupancy=(s,i)=>(i*73)%700<386){
  const slots=[];
  for(let zone=0;zone<5;zone++)for(let n=0;n<100;n++){
   const row=Math.floor(n/10),col=n%10;
   slots.push({id:`${'ABCDE'[zone]}-${String(n+1).padStart(3,'0')}`,zone:'ABCDE'[zone],kind:'standard',level:0,x:zone*37-87+col*3.2,z:-64+Math.floor(row/2)*17+(row%2)*6,y:0});
  }
  for(let n=0;n<100;n++)for(let level=0;level<2;level++)slots.push({id:`M-${String(n+1).padStart(3,'0')}-${level?'U':'L'}`,zone:'M',kind:'mechanical',group:n+1,level,x:(n%20)*3.2-30,z:37+Math.floor(n/20)*11,y:level*3.5});
- return slots.map((s,i)=>({...s,occupied:(i*73)%700<386}));
+ return slots.map((s,i)=>({...s,occupied:!!occupancy(s,i)}));
 }
 export function parkingStats(slots){const occupied=slots.filter(s=>s.occupied).length;return {total:slots.length,occupied,free:slots.length-occupied,mechanical:slots.filter(s=>s.kind==='mechanical').length};}
 export function filterParking(slots,{zone='all',status='all',level='all',query=''}={}){return slots.filter(s=>(zone==='all'||s.zone===zone)&&(status==='all'||s.occupied===(status==='occupied'))&&(level==='all'||s.level===Number(level))&&s.id.includes(query.trim().toUpperCase()));}
-export function createParkingBrowser({scene,camera,controls,host,onFocus,onExit,onStats}){
- const slots=createParkingInventory(),root=new THREE.Group();root.name='地下停车场 · 示意';root.visible=false;scene.add(root);
+export function createParkingBrowser({scene,camera,controls,host,onFocus,onExit,onStats,occupancy}){
+ const slots=createParkingInventory(occupancy),root=new THREE.Group();root.name='地下停车场 · 示意';root.visible=false;scene.add(root);
  let active=false,saved=[],selected=null,oldMin=95;const filters={zone:'all',status:'all',level:'all',query:''};
  const panel=document.createElement('section');panel.className='parking-panel';panel.hidden=true;host.appendChild(panel);
  const caption=document.createElement('div');caption.className='parking-caption';caption.hidden=true;host.appendChild(caption);

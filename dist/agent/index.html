@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080d17">
+<title>越城院区 · 安防 AI 指挥决策台</title>
+<style>
+/* 视觉语言对齐同事版驾驶舱（Yuecheng.Sec theme.css）：石墨玻璃、薄荷青主色、紫蓝辅光、DIN 数字 */
+:root{
+  --bg:#080d17;--txt:#e7eef9;--mut:#8c9cb3;--dim:#64748f;
+  --cy:#75f4d2;--blue:#9295ff;--grn:#75e9b8;--org:#ffc284;--red:#ff8293;--ai:#c7b9ff;
+  --line:#7086ac26;--line2:#8aa5c23a;--card:#25354b80;--cardline:#8ca1bc26;
+  --fn:"Avenir Next","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+  --num:"DIN Alternate","Avenir Next","Helvetica Neue",ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--fn);overflow:hidden;font-size:12px}
+#stage{width:1920px;height:1080px;position:absolute;left:0;top:0;transform-origin:0 0;display:flex;flex-direction:column;padding:14px 22px 12px;overflow:hidden;isolation:isolate}
+#stage::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(ellipse at 10% 15%,#203e513f,transparent 37%),radial-gradient(ellipse at 80% 5%,#5645a52e,transparent 40%),radial-gradient(ellipse at 52% 95%,#12484c35,transparent 50%)}
+button{font-family:inherit;cursor:pointer;border:1px solid transparent;background:none;color:inherit;transition:background .2s,border-color .2s,color .2s,box-shadow .2s}
+button:hover{border-color:#9ee8d2}
+button:active{transform:translateY(1px)}
+button:disabled{opacity:.5;cursor:default}
+[hidden]{display:none!important}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-thumb{background:#546583;border-radius:8px}::-webkit-scrollbar-track{background:transparent}
+
+/* ===== 表头：品牌 · 居中大标题 · 时钟（对齐同事版 .header） ===== */
+.hdr{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;position:relative;border:1px solid #ffffff0c;border-radius:16px;background:linear-gradient(110deg,#101a29b8,#131a2bc2 70%,#211b38a0);box-shadow:inset 0 1px #ffffff0a,0 10px 24px #0003}
+.hdr::after{content:"";position:absolute;bottom:-1px;left:26px;right:26px;height:1px;background:linear-gradient(90deg,transparent,#90dfd93b,#b69fff3b,transparent)}
+.brand{display:flex;align-items:center;gap:15px}
+.brandmark{width:43px;height:43px;border-radius:14px;border:1px solid #b9ffeb66;display:grid;place-items:center;color:#e1fff5;font-size:30px;background:radial-gradient(circle at 20% 0%,#d6ffed99,transparent 48%),linear-gradient(135deg,#399e92,#123338);box-shadow:inset 1px 1px 1px #d5fffca6,inset -2px -2px 5px #081d2e,0 6px 20px #52cda32b;transform:perspective(180px) rotateY(-13deg) rotateZ(-5deg)}
+.brand strong{display:block;font-size:18px;letter-spacing:1px;font-weight:650;color:#f0f3ff}
+.brand small{display:block;font-size:6.5px;letter-spacing:.7px;color:#8397ae;margin-top:4px}
+.campus{border-left:1px solid #ffffff1a;padding-left:13px;margin-left:4px;color:#c3cee1;letter-spacing:2px;font-size:11px}
+.heading{position:absolute;left:50%;transform:translateX(-50%);text-align:center;white-space:nowrap}
+.heading>span{display:block;font-size:25px;letter-spacing:2px;color:#f0f3ff;text-shadow:0 2px 16px #8d7aff38;font-weight:600}
+.heading small{display:block;font-size:8px;letter-spacing:3px;color:#9e9cc9;margin-top:4px}
+.headright{display:flex;align-items:center;gap:10px;font-size:11px;color:#aab8cb}
+.online-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--grn);box-shadow:0 0 8px #75e9b899;flex:none}
+.head-divider{width:1px;height:26px;background:#ffffff17;margin:0 6px}
+.clock{text-align:right}
+.clock b{display:block;font-family:var(--num);font-size:25px;font-variant-numeric:tabular-nums;letter-spacing:1px;line-height:1.1;color:#f0f3ff;font-weight:600}
+.clock small{display:block;font-size:9.5px;color:#798ba4;margin-top:2px}
+.icon-button{width:31px;height:31px;border-radius:10px;background:linear-gradient(145deg,#28364c,#111c2c);border:1px solid #53627b45;box-shadow:inset 0 1px #ffffff13,0 4px 8px #0003;color:#93b2c4;font-size:17px;display:grid;place-items:center}
+
+/* ===== 导航行（对齐 .nav / .navlinks / .navitem） ===== */
+.nav{height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 4px;margin:8px 0 10px}
+.navlinks{height:42px;display:flex;gap:4px;padding:4px;background:#111b2b;border:1px solid #ffffff0d;border-radius:13px;box-shadow:inset 0 1px #ffffff05,0 7px 20px #0002}
+.navitem{border-radius:9px;min-width:118px;padding:0 16px;font-size:12px;color:#97a8c1;letter-spacing:.4px;display:flex;align-items:center;justify-content:center;gap:7px;border:0}
+.navitem:hover{color:#f2ffff;border-color:transparent}
+.navitem.active{color:#072c2c;background:linear-gradient(115deg,#b1ffdf,#75d7db);box-shadow:inset 0 1px #fff9,0 3px 12px #53d9bb2b;font-weight:650}
+.navitem.active:hover{color:#082a2b}
+.navitem b{font-size:9.5px;padding:1px 5px;border-radius:5px;background:#ff7f8730;color:#ffa3af;font-weight:600}
+.navitem b.o{background:#ffad5a2a;color:#ffcd95}
+.navitem.active b{background:#0a3a36;color:#b1ffdf}
+.navmeta{display:flex;align-items:center;gap:10px;font-size:10.5px;color:#889bb3}
+.demo-tag{border:1px solid #9d8ef24d;color:#c7b9ff;background:#8d72de17;border-radius:6px;padding:4px 6px;font-size:9px;letter-spacing:1px}
+.weather{color:#a6b5cb;display:flex;align-items:center;gap:6px}
+.demo-btn{border:1px solid #ff98a44d;background:linear-gradient(120deg,#4a2b3c,#352a4e);color:#ffd2d8;border-radius:9px;padding:7px 14px;font-size:12px;font-weight:600;box-shadow:inset 0 1px #ffffff14,0 4px 12px #ff829322}
+.demo-btn:hover{box-shadow:0 0 18px #ff829345;border-color:#ffa3af}
+
+/* ===== 布局 ===== */
+main{flex:1;display:none;min-height:0}
+main.on{display:grid}
+#v-sec{grid-template-columns:450px 1fr 420px;gap:14px}
+#v-dec{grid-template-columns:470px 1fr 470px;gap:14px}
+#v-hz{grid-template-columns:430px 1fr 460px;gap:14px}
+#v-cap{grid-template-rows:1fr 176px;gap:14px}
+.col{display:flex;flex-direction:column;gap:14px;min-height:0}
+
+/* ===== 面板（对齐 .panel：玻璃渐变、顶部高光线、鼠标高光） ===== */
+.panel{border:1px solid var(--line);border-radius:17px;background:radial-gradient(ellipse at 5% 0%,#2e415745,transparent 60%),linear-gradient(140deg,#182336e8,#0c1525ee);box-shadow:inset 0 1px #e5f0ff0d,0 12px 27px #00000032;isolation:isolate;padding:14px 16px;display:flex;flex-direction:column;min-height:0;position:relative;transition:border-color .25s,box-shadow .25s;animation:panel-reveal .65s cubic-bezier(.22,1,.36,1) both}
+.panel::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;background:radial-gradient(260px circle at var(--px,20%) var(--py,0%),#a8caff12,transparent 75%)}
+.panel::after{content:"";position:absolute;width:50%;height:1px;top:-1px;left:20%;background:linear-gradient(90deg,transparent,#b8cfff39,transparent);pointer-events:none}
+.panel:hover{border-color:#92b2d743;box-shadow:inset 0 1px #e5f0ff14,0 15px 30px #0004}
+.col .panel:nth-child(2){animation-delay:.07s}.col .panel:nth-child(3){animation-delay:.14s}
+.ph{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;min-height:21px}
+.ph h3{font-size:13.5px;font-weight:550;letter-spacing:.4px;color:#e1eaf9;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.ph h3::before{content:"";width:5px;height:5px;border-radius:2px;background:#87eed3;box-shadow:0 0 9px #75f4d250;flex:none}
+.ph small{font-size:9px;color:#8b9bb7;letter-spacing:.5px;text-align:right}
+.ph small em{font-style:normal;letter-spacing:1.5px;color:#7f93b2;margin-right:6px}
+.tag{font-size:9.5px;padding:3px 7px;border-radius:6px;border:1px solid #8b9eec35;background:#8296ff0d;color:#aab9f7;white-space:nowrap;letter-spacing:.3px}
+.tag.ai{color:#c7b9ff;border-color:#9d8ef24d;background:#8d72de17}
+.tag.red{color:#ffa3af;border-color:#ff98a431;background:#ff7f8714}
+.tag.org{color:#ffbd9e;border-color:#ffad7d40;background:#dd754b15}
+.tag.grn{color:#8becbc;border-color:#5be1a62b;background:#5be1a60d}
+.tag.cy{color:#b5ffe7;border-color:#75f4d240;background:#75f4d210}
+.scroll{overflow:auto;min-height:0}
+
+/* ===== KPI 卡（对齐 .kpis>div + .kpi-sculpture 光球） ===== */
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.kpi{position:relative;overflow:hidden;isolation:isolate;padding:12px 15px;border:1px solid #7a9ac330;border-radius:16px;background:radial-gradient(ellipse at 100% 0%,var(--kpi-glow,#4caca825),transparent 80%),linear-gradient(145deg,#1b2b3c,#101a2c);box-shadow:inset 0 1px #ffffff15,0 8px 18px #0003;animation:panel-reveal .65s cubic-bezier(.22,1,.36,1) both}
+.kpi:nth-child(2){--kpi-glow:#c9565a30;--orb-light:#ffb3bb;--orb-dark:#7a2f3a;animation-delay:.07s}
+.kpi:nth-child(3){--kpi-glow:#4caca825;--orb-light:#adffe4;--orb-dark:#207b75;animation-delay:.14s}
+.kpi:nth-child(4){--kpi-glow:#4d79ba33;--orb-light:#a5ccff;--orb-dark:#20457b;animation-delay:.21s}
+.kpi:nth-child(5){--kpi-glow:#7763b83a;--orb-light:#c6b7ff;--orb-dark:#45417e;animation-delay:.28s}
+.kpi:nth-child(6){--kpi-glow:#c9865130;--orb-light:#ffd0a5;--orb-dark:#895033;animation-delay:.35s}
+.kpi small{color:#b1c1d4;font-size:10.5px;position:relative;z-index:1}
+.kpi b{display:block;font-family:var(--num);font-size:30px;font-weight:600;margin-top:3px;line-height:1.1;color:#eefff9;letter-spacing:-.5px;text-shadow:0 2px 8px #0005;position:relative;z-index:1}
+.kpi b i{font-style:normal;font-size:10px;color:#a6bdca;margin-left:3px;font-family:var(--fn);font-weight:400;letter-spacing:0}
+.kpi em{font-style:normal;font-size:9.5px;color:#8fa7bb;position:relative;z-index:1;display:block;margin-top:3px}
+.kpi em.bad{color:#ffa3af}
+.kpi.hot b{color:#ffcdd3}.kpi.ai b{color:#ddd3ff}.kpi.cy b{color:#c6fff0}.kpi.grn b{color:#b7f7d8}
+.orb{position:absolute;right:12px;top:24px;width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 27% 23%,#fff9,transparent 23%),radial-gradient(circle at 35% 30%,var(--orb-light,#adffe4),var(--orb-dark,#207b75) 58%,#101c32 90%);box-shadow:inset -3px -4px 8px #0005,inset 1px 1px 3px #fff7,7px 12px 13px #0004,0 0 20px var(--kpi-glow,#5de3c924);opacity:.65;transform:perspective(180px) rotateY(-20deg);animation:sculpture-float 7s ease-in-out infinite;pointer-events:none;z-index:0}
+.orb::after{content:"";position:absolute;inset:-8px;border:2px solid var(--orb-light,#b9ffe5);border-left-color:#ffffff20;border-right-color:#ffffff40;border-radius:50%;transform:rotateX(65deg) rotateZ(-32deg);box-shadow:0 1px 3px #0006}
+.kpi:nth-child(2) .orb,.kpi:nth-child(5) .orb{border-radius:12px;rotate:18deg;animation-delay:-1.4s}
+.kpi:nth-child(3) .orb{animation-delay:-2.8s}.kpi:nth-child(4) .orb{animation-delay:-4s}.kpi:nth-child(6) .orb{border-radius:12px;rotate:-18deg;animation-delay:-5.2s}
+
+/* ===== 预警流（对齐 .alarm-item：级别标签 · 时间 · 标题 · 位置 · 动作） ===== */
+.alist{display:flex;flex-direction:column}
+.al{padding:11px 10px 11px 12px;border-bottom:1px solid #7c91b31a;cursor:pointer;position:relative;transition:background .2s;border-radius:8px}
+.al:hover{background:#a8caff08}
+.al.sel{background:#75f4d20c;box-shadow:inset 3px 0 0 #86e6c5}
+.al.new{animation:slide .5s ease}
+@keyframes slide{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
+.al .top{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.lvp{font-size:9px;padding:3px 7px;border-radius:5px;border:1px solid #ff98a431;background:#ff7f8714;color:#ffa3af;white-space:nowrap;letter-spacing:.3px}
+.lvp.org{color:#ffcd95;background:#ffad5a12;border-color:#ffad5a35}
+.lvp.cy{color:#b5ffe7;background:#75f4d210;border-color:#75f4d235}
+.lvp.grn{color:#8becbc;background:#5be1a60d;border-color:#5be1a62b}
+.al .tm{font-family:var(--num);font-size:11px;color:#8496af;margin-left:auto;font-variant-numeric:tabular-nums}
+.al .ttl{font-size:14px;font-weight:500;color:#e6e5ef;margin-bottom:4px}
+.al .loc{font-size:11px;color:#a1aec3;display:flex;justify-content:space-between}
+.al .ai-line{margin-top:6px;font-size:11.5px;color:#c4b5fd;display:flex;gap:6px;align-items:flex-start;line-height:1.5}
+.al .ai-line::before{content:"AI";font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:#8d72de2a;border:1px solid #9d8ef24d;flex:none;margin-top:2px;color:#c7b9ff}
+.al .acts{display:flex;gap:6px;margin-top:9px}
+.btn{font-size:11px;padding:5px 11px;border-radius:7px;background:#2b3c53a6;border:1px solid #8aa5c22f;color:#c7d6e6}
+.btn.p{background:linear-gradient(110deg,#a4f5d5,#8bc7f4);color:#0a2a36;border-color:transparent;font-weight:600}
+.btn.p:hover{border-color:transparent;box-shadow:0 0 14px #84e6d055}
+.btn.d{color:#ffa3af;border-color:#ff98a431}
+.st{font-size:9.5px;padding:2px 7px;border-radius:5px;white-space:nowrap;border:1px solid}
+.st.pending{background:#ff7f8714;color:#ffa3af;border-color:#ff98a431}
+.st.dispatched{background:#ffad5a12;color:#ffcd95;border-color:#ffad5a35}
+.st.closed{background:#5be1a60d;color:#8becbc;border-color:#5be1a62b}
+.st.watch{background:#8d72de17;color:#c7b9ff;border-color:#9d8ef24d}
+
+/* ===== 院区态势（对齐 .scene-panel / .model-toolbar / .layers / .building-label） ===== */
+.map{flex:1;position:relative;background:#0b1322;border-radius:17px;overflow:hidden;border:1px solid #768da94d;box-shadow:inset 0 1px #ffffff1c,0 16px 40px #0005,0 0 40px #6f82c00b}
+.map::after{content:"";position:absolute;top:0;left:18%;right:18%;height:1px;background:linear-gradient(90deg,transparent,#b0ffee77,#b8a0ff77,transparent);box-shadow:0 0 18px #b0ffee30;z-index:4;pointer-events:none}
+.map3d{position:absolute;inset:0}
+.map3d canvas{display:block;width:100%!important;height:100%!important}
+.overlay{position:absolute;inset:0;pointer-events:none}
+.pin{position:absolute;transform:translate(-50%,-100%);pointer-events:auto;cursor:pointer;display:flex;align-items:center;gap:6px;padding:4px 9px 4px 7px;border-radius:8px;background:linear-gradient(135deg,#2c4659ee,#132739ee);border:1px solid #aad6db66;font-size:10.5px;font-weight:500;white-space:nowrap;color:#e2ffff;margin-top:-8px;box-shadow:inset 0 1px #e6fffa2b,0 5px 12px #0005;transition:box-shadow .2s}
+.pin::after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-4px;border:4px solid transparent;border-top-color:#aad6db88}
+.pin i{width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);animation:pulse 1.2s infinite;flex:none}
+.pin.org{border-color:#ffc28466}.pin.org i{background:var(--org);box-shadow:0 0 8px var(--org);animation:none}
+.pin.cy{border-color:#75f4d255}.pin.cy i{background:var(--cy);box-shadow:0 0 8px var(--cy);animation:none}
+.pin:not(.org):not(.cy){border-color:#ff98a488}
+.pin.sel{box-shadow:0 0 0 2px #86e6c599,0 6px 18px #0006}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.gpin{position:absolute;transform:translate(-50%,-50%);pointer-events:none;width:20px;height:20px;border-radius:50%;border:1px solid #9ef3c8;background:radial-gradient(circle at 35% 25%,#7fd1a9,#1a4a3b 60%);color:#e8fff3;font-size:8.5px;font-weight:700;display:grid;place-items:center;box-shadow:inset 0 1px #fff5,0 3px 7px #0008,0 0 14px #81e9e827}
+.gpin.b{border-color:#ffc284;background:radial-gradient(circle at 35% 25%,#f0b27a,#5a3a1e 60%);color:#fff0d8}
+.gpin span{position:absolute;top:20px;left:50%;transform:translateX(-50%);font-size:9.5px;color:#a7f3d0;white-space:nowrap;font-weight:500;text-shadow:0 2px 4px #000}
+.gpin.b span{color:#fcd9a0}
+.maptop{position:absolute;right:12px;top:10px;display:flex;gap:2px;z-index:5;border:1px solid #6a829c2b;border-radius:10px;padding:3px;background:#111e31c9;backdrop-filter:blur(12px)}
+.maptop button,.maptop a{border:0;border-radius:7px;background:transparent;color:#90a9c0;font-size:10.5px;padding:5px 9px;text-decoration:none;white-space:nowrap}
+.maptop button:hover{color:#d9fff2}
+.maptop button.on{background:linear-gradient(130deg,#294d58,#273d59);color:#b5ffe7;box-shadow:inset 0 1px #d0fff72e,0 2px 5px #0004}
+.maptop a{color:#ddd4ff;background:linear-gradient(120deg,#383451ed,#25354dec);margin-left:4px}
+.mapinfo{position:absolute;left:14px;top:12px;z-index:5;font-size:9.5px;color:#8ed4c8;letter-spacing:1.5px;display:flex;align-items:center;gap:7px}
+.mapinfo::before{content:"";width:6px;height:6px;border-radius:50%;background:#75f4d2;box-shadow:0 0 8px #75f4d2;animation:pulse 1.6s infinite}
+.mapinfo b{font-weight:500;color:#c6ffef;letter-spacing:.5px}
+.legend{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;display:flex;gap:6px;align-items:center;z-index:5;border:1px solid #8799ba36;border-radius:13px;padding:6px 10px;background:#17243bdd;box-shadow:inset 0 1px #ffffff0f,0 8px 24px #0004;font-size:10px;color:#92adc0;white-space:nowrap}
+.legend .lt{margin-right:4px;letter-spacing:.5px}
+.legend span:not(.lt){background:#2c405ab3;border:1px solid #86a7bf2b;color:#d8ecf7;border-radius:8px;padding:4px 8px}
+.legend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:0}
+.mapsvg{position:absolute;inset:0;width:100%;height:100%;display:none;background:radial-gradient(600px 400px at 50% 40%,#75f4d20a,transparent 70%)}
+.map.flat .mapsvg{display:block}.map.flat .map3d,.map.flat .overlay{display:none}
+.bld{fill:#1b2b3ce6;stroke:#7a9ac355;stroke-width:1.2}
+.bld.hot{stroke:var(--red);stroke-width:2;filter:drop-shadow(0 0 8px #ff829366)}
+.bld.sel{stroke:var(--cy);stroke-width:2}
+.bl{fill:#c9d6ea;font-size:13px;font-weight:600;text-anchor:middle;pointer-events:none}
+.bs{fill:#8c9cb3;font-size:10px;text-anchor:middle;pointer-events:none}
+.road{stroke:#7a9ac322;stroke-width:14;fill:none;stroke-linecap:round}
+.road2{stroke:#7a9ac366;stroke-width:1;stroke-dasharray:6 8;fill:none}
+.hs circle.r{fill:none;stroke:var(--red);stroke-width:1.5;animation:ring 1.6s infinite}
+.hs.org circle.r{stroke:var(--org)}.hs.cy circle.r{stroke:var(--cy)}
+@keyframes ring{0%{r:6;opacity:1}100%{r:24;opacity:0}}
+.hs circle.c{fill:var(--red)}.hs.org circle.c{fill:var(--org)}.hs.cy circle.c{fill:var(--cy)}
+.hs text{fill:#fff;font-size:11px;font-weight:600;paint-order:stroke;stroke:#0b1322;stroke-width:3px}
+.guard circle{fill:var(--grn);stroke:#1a4a3b;stroke-width:1}
+.guard text{fill:#a7f3d0;font-size:10px;text-anchor:middle}
+
+/* ===== 三维交互：楼栋标签 / 设备点位 / 楼层浏览 / 地库浏览（沿用同事版 style.css + theme.css 对应规则） ===== */
+.c3d-labels{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2}
+.building-label{position:absolute;transform:translate(-50%,-100%);margin-top:-12px;display:flex;align-items:center;gap:3px;padding:3px 7px;border-radius:8px;border:1px solid #aad6db66;background:linear-gradient(135deg,#2c4659ee,#132739ee);color:#e2ffff;font-size:10px;white-space:nowrap;pointer-events:auto;cursor:pointer;text-shadow:0 1px 2px #000;box-shadow:inset 0 1px #e6fffa2b,0 5px 12px #0005;z-index:7}
+.building-label::after{content:"";position:absolute;left:50%;top:100%;width:1px;height:12px;background:linear-gradient(#42849c,transparent);pointer-events:none}
+.building-label b{font-family:var(--num);font-size:14px;font-weight:500;color:#d4fff0}
+.building-label span{font-size:8px;letter-spacing:1px}
+.building-label:hover{border-color:#9ee8d2;color:#fff}
+.map-point{position:absolute;width:19px;height:19px;transform:translate(-50%,-50%);border-radius:50%;border:1px solid #46e5ef;background:radial-gradient(circle at 35% 25%,#759d9c,#19434e 60%);color:#8bf8fc;font:10px system-ui;pointer-events:auto;display:grid;place-items:center;padding:0;box-shadow:inset 0 1px #fff5,0 3px 7px #0008,0 0 14px #81e9e827;z-index:3;cursor:pointer}
+.map-point.door{border-color:#6295ff;color:#b1c8ff;background:radial-gradient(circle at 35% 25%,#6f8fc9,#183862 60%)}
+.map-point.fire{border-color:#efad59;color:#ffd296;background:radial-gradient(circle at 35% 25%,#c99a63,#654422 60%)}
+.map-point.patrol{border-color:#55d9b2;color:#9fffe3;background:radial-gradient(circle at 35% 25%,#6fc9a9,#185044 60%)}
+.map-point:hover,.map-point.selected{scale:1.25;background:#2d7285;color:#fff;z-index:9;border-color:#9ee8d2}
+.floor-active .c3d-labels,.floor-active #overlay,.floor-active .legend,.parking-active .c3d-labels,.parking-active #overlay,.parking-active .legend{display:none}
+.floor-overlays{position:absolute;inset:0;pointer-events:none;z-index:12;overflow:hidden}
+.floor-overlays button{pointer-events:auto}
+.floor-overlays .map-point{width:21px;height:21px}
+.floor-label{position:absolute;transform:translate(-100%,-50%);padding:5px 9px;border:1px solid #4cb4cd;color:#b9f5ff;background:#123348e8;border-radius:6px;font:12px var(--num);box-shadow:0 4px 9px #0005;cursor:pointer}
+.floor-label:hover{border-color:#9ee8d2}
+.floor-panel{position:absolute;right:16px;top:52px;width:232px;max-height:calc(100% - 70px);overflow:auto;padding:14px;border-radius:12px;background:linear-gradient(145deg,#202c43f5,#101c2ff5);border:1px solid #8a9bb64d;box-shadow:inset 0 1px #ffffff1c,0 20px 45px #0006;backdrop-filter:blur(18px);z-index:20}
+.floor-panel-head{display:flex;gap:8px;justify-content:space-between;align-items:center}
+.floor-panel-head b{font-size:12.5px;color:#e6eef9}
+.floor-panel-head button{font-size:10px;color:#77bed2;padding:0;border:0}
+.floor-current{font-size:10.5px;color:#adc5d7;line-height:1.8;margin:5px 0}
+.floor-actions{display:flex;gap:6px}
+.floor-actions button,.floor-buttons button{border:1px solid #9aafc52e;border-radius:8px;background:linear-gradient(140deg,#293d55,#1b2b42);color:#c4d5e6;padding:5px 9px;font-size:10px}
+.floor-actions .active,.floor-buttons .active{color:#082b29;background:linear-gradient(130deg,#b0f5d7,#79c9d5);border-color:#c5fbe1}
+.floor-buttons{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.interior-toggle{margin-top:12px;border:1px solid #9aafc52e;border-radius:8px;background:linear-gradient(140deg,#293d55,#1b2b42);padding:7px 9px;color:#c4d5e6;font-size:10px;width:100%;text-align:left}
+.interior-toggle[aria-pressed="false"]{opacity:.55}
+.interior-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:9px;color:#93bfd0}
+.interior-legend span:nth-child(3){color:#67d5b5}.interior-legend span:nth-child(4){color:#95b8ff}
+.floor-note{font-size:9px;color:#9eacc4;line-height:1.7;margin-top:8px}
+.interior-label{position:absolute;transform:translate(-50%,-100%);background:#123e37ee;border:1px solid #55c2a4;color:#b9ffe5;border-radius:6px;padding:3px 5px;font-size:10px;white-space:nowrap;pointer-events:none;box-shadow:0 4px 9px #0005}
+.interior-label.lift{background:#203d62ee;border-color:#7ca2e4;color:#d0e0ff}
+.floor-transition-cue{position:absolute;left:18px;bottom:18px;display:flex;align-items:center;gap:12px;z-index:18;pointer-events:none;padding:10px 16px;border:1px solid #96e6da44;border-radius:14px;background:linear-gradient(120deg,#142d3de8,#252642e8);box-shadow:0 8px 28px #0005,inset 0 1px #d9fff31c;backdrop-filter:blur(12px)}
+.floor-transition-cue b{display:block;color:#d9fff2;font-size:12px;letter-spacing:1px}
+.floor-transition-cue small{display:block;margin-top:4px;color:#9cb9d5;font-size:10px}
+.transition-orbit{width:26px;height:26px;border:1px solid #a1ffe8;border-radius:50%;box-shadow:0 0 16px #72e0d844,inset 0 0 12px #72e0d82b;transform:rotateX(52deg) rotateZ(calc(var(--transition-progress,0)*260deg));position:relative}
+.transition-orbit::after{content:"";position:absolute;left:0;top:0;width:6px;height:6px;background:#d2fff0;border-radius:50%;box-shadow:0 0 12px #8effd9}
+.floor-transitioning .floor-label{opacity:.65}
+.floor-transitioning .floor-panel{border-color:#9af1dc66}
+.floor-transitioning .floor-panel::after{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#79e8d3,#a4a5ff);transform:scaleX(var(--transition-progress,0));transform-origin:left;pointer-events:none}
+.parking-panel{position:absolute;right:16px;top:52px;bottom:16px;width:300px;border-radius:12px;background:linear-gradient(145deg,#202c43f5,#101c2ff5);border:1px solid #8a9bb64d;box-shadow:inset 0 1px #ffffff1c,0 20px 45px #0006;backdrop-filter:blur(18px);z-index:22;padding:14px;overflow:auto}
+.parking-panel header{display:flex;justify-content:space-between;align-items:center;font-size:15px;color:#e6eef9}
+.parking-panel header button{font-size:10px;color:#9abac9;border:0}
+.parking-totals{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.parking-totals small{font-size:10px;color:#96b1bf;display:block}
+.parking-totals b{font:26px var(--num);color:#e0e9fa}
+.parking-totals>div:nth-child(2) b{color:#50d9b1}.parking-totals>div:nth-child(3) b{color:#f5b46a}
+.parking-note{font-size:10px;line-height:1.7;color:#9eacc4;margin:8px 0}
+.parking-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.parking-filters label,.parking-search{display:block;font-size:10px;color:#9db7ca}
+.parking-filters label:last-child{grid-column:1/-1}
+.parking-panel select,.parking-panel input{width:100%;border-radius:8px;border:1px solid #91a7c640;background:#15243b;color:#d9e5f5;padding:6px;margin-top:4px;font-size:11px;font-family:inherit}
+.parking-search{margin-top:8px}
+.parking-actions{display:flex;gap:8px;margin:10px 0}
+.parking-actions button,.parking-selected button{padding:6px 10px;border-radius:8px;background:linear-gradient(140deg,#293d55,#1b2b42);border:1px solid #9aafc52e;color:#c4d5e6;font-size:10px}
+.parking-legend{display:flex;gap:12px;font-size:11px;color:#50d9b1}
+.parking-legend span+span{color:#f5b46a}
+.parking-selected{padding:10px;margin-top:10px;border:1px solid #849cc13b;border-radius:10px;background:#8b9ac909;font-size:11px;color:#d3dfed}
+.parking-selected p{font-size:10px;color:#91b4c8;line-height:1.7}
+.parking-match{font-size:10px;color:#95b2c6;margin:6px 0}
+.parking-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;max-height:200px;overflow:auto}
+.parking-grid button{padding:6px 2px;border:1px solid #287764;border-radius:6px;background:#103e36;color:#83e8c9;font:10px var(--num)}
+.parking-grid button.occupied{background:#493322;color:#ffd09b;border-color:#90603b}
+.parking-grid button.selected{outline:2px solid #69e6ff;outline-offset:-2px}
+.parking-grid small{display:block;font:9px var(--fn);margin-top:3px}
+.parking-caption{position:absolute;left:18px;top:52px;z-index:12}
+.parking-caption b{font-size:18px;display:block;color:#e0fff2}
+.parking-caption span{font-size:11px;color:#a0bdd0;display:block;margin-top:6px}
+.parking-marker{position:absolute;transform:translate(-50%,-100%);padding:6px 10px;border-radius:8px;background:linear-gradient(145deg,#274f60,#243351);border:1px solid #75dce8;color:#cbf5ff;font-size:12px;z-index:16;pointer-events:none;box-shadow:0 6px 15px #0008}
+.legend .layer{background:transparent;border:1px solid transparent;color:#768ca7;border-radius:8px;padding:4px 8px;font-size:10px;display:flex;align-items:center}
+.legend .layer.active{background:#2c405ab3;border-color:#86a7bf2b;color:#d8ecf7}
+.legend .layer b{color:#9ebbd0;margin-left:3px;font-family:var(--num);font-weight:500}
+.layer-dot{width:5px;height:5px;border-radius:50%;display:inline-block;margin-right:5px;opacity:.25}
+.active .layer-dot{opacity:1;box-shadow:0 0 6px currentColor}
+.legend .sep{width:1px;height:14px;background:#ffffff1a;margin:0 4px}
+.pv{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;border:1px solid #5c78964a;display:block;filter:saturate(.7) brightness(.95)}
+.pvcap{display:flex;justify-content:space-between;font-size:10.5px;color:#8ed4c8;margin-top:6px}
+.dinfo{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11.5px}
+.dinfo div{background:var(--card);border:1px solid var(--cardline);border-radius:9px;padding:8px 10px;color:#d3dfed}
+.dinfo span{display:block;font-size:10px;color:#8c9cb3;margin-bottom:2px}
+.rel{display:flex;flex-direction:column;gap:5px}
+.rel div{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:#23324a70;font-size:11.5px;cursor:pointer}
+.rel div:hover{background:#75f4d20c}
+.rel div .tm{margin-left:auto;font-family:var(--num);color:#8496af;font-size:10.5px}
+
+/* ===== 处置闭环时间轴 ===== */
+.tl{display:flex;align-items:flex-start;margin-top:6px}
+.tl .step{flex:1;position:relative;padding-top:22px;text-align:center}
+.tl .step::before{content:"";position:absolute;left:0;right:0;top:9px;height:2px;background:#2b3951}
+.tl .step:first-child::before{left:50%}.tl .step:last-child::before{right:50%}
+.tl .step i{position:absolute;left:50%;top:3px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:#111c2d;border:2px solid #3d4b66;z-index:1}
+.tl .step.done i{background:#86e6c5;border-color:#86e6c5;box-shadow:0 0 10px #86e6c599}
+.tl .step.cur i{background:var(--org);border-color:var(--org);animation:pulse 1s infinite;box-shadow:0 0 10px #ffc28488}
+.tl .step.done::before{background:linear-gradient(90deg,#687adc,#86e6c5)}
+.tl .step b{display:block;font-size:12.5px;font-weight:500;color:#d3dfed}
+.tl .step small{display:block;font-size:10.5px;color:#8c9cb3;margin-top:2px;font-family:var(--num)}
+.tl .step .who{font-size:10px;color:#64748f;font-family:var(--fn)}
+.tlhead{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.tlhead b{font-size:13.5px;font-weight:550;color:#e1eaf9}
+.tlhead .m{color:#8c9cb3;font-size:11px;margin-left:6px}
+
+/* ===== 右栏卡片 ===== */
+.scene6{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.sc{background:var(--card);border:1px solid var(--cardline);border-radius:10px;padding:9px 10px;position:relative}
+.sc small{font-size:11px;color:#9baec5;display:block;white-space:nowrap}
+.sc b{font-family:var(--num);font-size:24px;font-weight:600;display:block;line-height:1.1;margin-top:1px;color:#e0e9fa;letter-spacing:-.5px}
+.sc b i{font-style:normal;font-size:10px;color:#9baec5;font-family:var(--fn);margin-left:4px;font-weight:400;letter-spacing:0}
+.sc svg{position:absolute;right:8px;bottom:8px;width:56px;height:22px}
+.sc .ln{fill:none;stroke-width:1.5}
+.bar{display:flex;align-items:center;gap:10px;font-size:11.5px;margin:6px 0}
+.bar span{width:118px;color:#9baec5;white-space:nowrap}
+.bar .tr{flex:1;height:6px;background:#2b3951;border-radius:4px;overflow:hidden}
+.bar .tr i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#687adc,#86e6c5);box-shadow:0 0 10px #6ce4cc55}
+.bar .tr i.hot{background:linear-gradient(90deg,#ffc284,#ff8293);box-shadow:0 0 10px #ff829355}
+.bar .tr i.low{background:#3d4b66;box-shadow:none}
+.bar b{width:62px;text-align:right;font-family:var(--num);font-weight:600;white-space:nowrap;color:#dce7f4}
+.note{font-size:11.5px;color:#96abc0;line-height:1.55;padding:8px 10px;border-radius:9px;background:#23324a70;border:1px dashed #8aa5c23a}
+.note b{color:#b5ffe7;font-weight:600}
+.note.warn{background:#dd754b10;border-color:#ffad7d40}.note.warn b{color:#ffcd95}
+.glist{display:flex;flex-direction:column;gap:5px;font-size:11.5px}
+.glist div{display:flex;justify-content:space-between;align-items:center;padding:6px 9px;background:#23324a70;border-radius:8px}
+.glist div span{color:#96abc0}
+.glist div b{font-weight:500;color:#d3dfed}
+.glist .g{display:flex;align-items:center;gap:7px}
+.glist .g i{width:6px;height:6px;border-radius:50%;background:var(--grn);box-shadow:0 0 6px #75e9b888}
+.glist .g i.b{background:var(--org);box-shadow:0 0 6px #ffc28488}
+.strip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px}
+.strip div{background:var(--card);border:1px solid var(--cardline);border-radius:8px;padding:6px 8px}
+.strip small{font-size:10px;color:#9baec5;display:block;white-space:nowrap}
+.strip b{font-family:var(--num);font-size:17px;color:#e0e9fa;letter-spacing:-.3px}
+.strip b i{font-style:normal;font-size:9.5px;color:#9baec5;font-family:var(--fn);margin-left:2px;font-weight:400;letter-spacing:0}
+
+/* ===== 院长决策 ===== */
+.gauge{display:flex;align-items:center;gap:16px}
+.gauge svg{width:170px;height:110px;flex:none;filter:drop-shadow(0 8px 9px #0008)}
+.gauge .gv{font-family:var(--num);font-size:46px;font-weight:700;line-height:1;color:#eefff9;letter-spacing:-1px}
+.gauge .gv i{font-style:normal;font-size:13px;color:#9baec5;font-family:var(--fn);margin-left:4px;font-weight:400;letter-spacing:0}
+.gauge .lvl{display:inline-block;margin-top:6px;font-size:11px;padding:3px 9px;border-radius:6px;background:#dd754b15;border:1px solid #ffad7d40;color:#ffbd9e}
+.gauge p{font-size:11.5px;color:#96abc0;margin-top:8px;line-height:1.55}
+.fac{display:flex;align-items:center;gap:8px;font-size:12px;padding:7px 0;border-bottom:1px dashed #7c91b31a}
+.fac:last-child{border:0}
+.fac .n{width:96px;color:#d3dfed}
+.fac .tr{flex:1;height:6px;background:#2b3951;border-radius:4px;overflow:hidden}
+.fac .tr i{display:block;height:100%;border-radius:4px}
+.fac b{width:34px;text-align:right;font-family:var(--num);color:#dce7f4}
+.fac small{width:150px;color:#8c9cb3;font-size:10.5px;text-align:right}
+.sug{border:1px solid var(--cardline);border-radius:12px;padding:12px 14px;background:var(--card);margin-bottom:10px;transition:.2s}
+.sug.ok{border-color:#5be1a655;background:#5be1a60d}
+.sug .h{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.sug .h b{font-size:14px;flex:1;font-weight:550;color:#e6eef9}
+.sug .h .cf{font-size:10.5px;color:#8c9cb3}
+.sug .h .cf i{display:inline-block;width:60px;height:5px;background:#2b3951;border-radius:3px;vertical-align:middle;margin-left:5px;overflow:hidden}
+.sug .h .cf i::after{content:"";display:block;height:100%;width:var(--w);background:linear-gradient(90deg,#9295ff,#c7b9ff);border-radius:3px}
+.sug .r{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;line-height:1.55}
+.sug .r h5{font-size:10px;color:#8b9bb7;font-weight:500;margin-bottom:3px;letter-spacing:1.5px}
+.sug .r li{list-style:none;padding-left:12px;position:relative;color:#c2d0e2}
+.sug .r li::before{content:"";position:absolute;left:0;top:8px;width:4px;height:4px;border-radius:50%;background:#8c9cb3}
+.sug .r .do li::before{background:#86e6c5;box-shadow:0 0 6px #86e6c588}
+.sug .r .do li{color:#e5f3ff}
+.sug .f{display:flex;gap:6px;margin-top:9px;align-items:center}
+.sug .f .src{margin-left:auto;font-size:10.5px;color:#64748f}
+.chart{flex:1;min-height:0;position:relative}
+.chart svg{width:100%;height:100%}
+.ax{stroke:#52637a30;stroke-width:1}
+.axt{fill:#8b9cb6;font-size:10px}
+.cl{fill:none;stroke-width:2}
+.chart .lg{position:absolute;right:8px;top:0;display:flex;gap:12px;font-size:10.5px;color:#9fb1c9}
+.chart .lg i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.sig{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #7c91b31a}
+.sig:last-child{border:0}
+.sig .ic{width:34px;height:34px;border-radius:9px;flex:none;display:grid;place-items:center;font-size:15px;background:var(--card);border:1px solid var(--cardline)}
+.sig .ic.w{background:#75f4d214;border-color:#75f4d230}.sig .ic.o{background:#dd754b15;border-color:#ffad7d40}.sig .ic.p{background:#8d72de17;border-color:#9d8ef24d}.sig .ic.r{background:#ff7f8714;border-color:#ff98a431}.sig .ic.g{background:#5be1a60d;border-color:#5be1a62b}
+.sig .b{flex:1;min-width:0}
+.sig .b b{font-size:12.5px;font-weight:500;display:block;line-height:1.4;color:#e6e5ef}
+.sig .b p{font-size:11.5px;color:#96abc0;line-height:1.5;margin-top:2px}
+.sig .b .m{font-size:10.5px;color:#64748f;margin-top:3px;display:flex;gap:8px;flex-wrap:wrap}
+.sig .b .m em{font-style:normal;color:#8ed4c8}
+.ftabs{display:flex;gap:3px;padding:3px;background:#111b2b;border:1px solid #ffffff0d;border-radius:9px}
+.ftabs button{font-size:10.5px;padding:3px 9px;border-radius:6px;color:#97a8c1;border:0}
+.ftabs button.on{color:#072c2c;background:linear-gradient(115deg,#b1ffdf,#75d7db);font-weight:600}
+.intl{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.intl div{background:var(--card);border:1px solid var(--cardline);border-radius:9px;padding:8px 10px}
+.intl small{font-size:10.5px;color:#9baec5}
+.intl b{display:block;font-family:var(--num);font-size:22px;margin-top:1px;color:#e0e9fa;letter-spacing:-.5px}
+.intl b i{font-style:normal;font-size:10px;font-family:var(--fn);color:#9baec5;margin-left:3px;font-weight:400;letter-spacing:0}
+.intl b.r{color:#ffcdd3}.intl b.o{color:#ffd9b3}.intl b.p{color:#ddd3ff}
+
+/* ===== 危化品台账 ===== */
+.hzsum{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hzc{background:var(--card);border:1px solid var(--cardline);border-radius:10px;padding:10px 12px;border-left:3px solid var(--c)}
+.hzc small{font-size:11.5px;color:#9baec5}
+.hzc b{font-family:var(--num);font-size:24px;display:block;line-height:1.1;margin-top:2px;color:#e0e9fa}
+.hzc b i{font-style:normal;font-size:10px;color:#9baec5;font-family:var(--fn);margin-left:4px;font-weight:400;letter-spacing:0}
+.hzc em{font-style:normal;font-size:10.5px;color:#8c9cb3;display:block;margin-top:3px}
+.flow{display:flex;align-items:center;gap:4px;font-size:11px;margin-top:4px}
+.flow span{flex:1;text-align:center;padding:7px 4px;border-radius:7px;background:var(--card);border:1px solid var(--cardline);line-height:1.3;color:#d3dfed}
+.flow span em{display:block;font-style:normal;font-size:9.5px;margin-top:2px}
+.flow span.e em{color:#8becbc}.flow span.n em{color:#ffa3af}.flow span.a em{color:#b5ffe7}
+.flow i{color:#64748f;font-size:12px;font-style:normal}
+table.hz{width:100%;border-collapse:collapse;font-size:12px}
+table.hz th{font-size:10.5px;color:#8b9bb7;font-weight:500;text-align:left;padding:6px 8px;border-bottom:1px solid #7086ac40;white-space:nowrap;position:sticky;top:0;background:#141f31;letter-spacing:.5px;z-index:1}
+table.hz td{padding:7px 8px;border-bottom:1px solid #7c91b31a;vertical-align:top;color:#d3dfed}
+table.hz tr.dept td{cursor:pointer}
+table.hz tr.dept:hover td{background:#a8caff08}
+table.hz tr.dept.sel td{background:#75f4d20c}
+table.hz td.n{font-family:var(--num);text-align:right;white-space:nowrap}
+table.hz td.n.lo{color:#ffcd95}
+table.hz td small{color:#8c9cb3}
+.cls{display:inline-block;font-size:9.5px;padding:1px 5px;border-radius:4px;margin-right:3px;border:1px solid}
+.cls.du{color:#ff9ad5;border-color:#ff9ad555;background:#ff9ad510}.cls.bao{color:#ffa3af;border-color:#ff98a431;background:#ff7f8714}.cls.ran{color:#ffcd95;border-color:#ffad5a35;background:#ffad5a12}.cls.fu{color:#b5ffe7;border-color:#75f4d235;background:#75f4d210}
+.ev2{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #7c91b31a;font-size:12px}
+.ev2:last-child{border:0}
+.ev2 .t{width:78px;font-family:var(--num);color:#8496af;flex:none;font-size:11px}
+.ev2 .b{flex:1}
+.ev2 .b b{display:block;font-weight:500;font-size:12.5px;color:#e6e5ef}
+.ev2 .b p{color:#96abc0;font-size:11.5px;margin-top:2px;line-height:1.5}
+.ev2 .ok{color:#8becbc;font-size:10.5px;white-space:nowrap}.ev2 .bad{color:#ffa3af;font-size:10.5px;white-space:nowrap}
+.clip{display:flex;align-items:center;gap:8px;margin-top:6px}
+.clip .f{width:72px;height:40px;border-radius:6px;background:linear-gradient(135deg,#15253a,#0f1a2c);border:1px solid #5c78964a;position:relative;overflow:hidden;flex:none}
+.clip .f::after{content:"REC 32s";position:absolute;right:4px;top:3px;font-size:8px;color:#ffa3af}
+.clip .f i{position:absolute;left:22%;top:25%;width:40%;height:55%;border:1.5px solid #ffc284;border-radius:2px}
+.dact2{display:flex;gap:8px;margin-top:10px}
+.dact2 button{flex:1;padding:9px;border-radius:9px;font-size:12.5px;background:linear-gradient(135deg,#2a405c,#1d2b42);border:1px solid #7295c340;color:#d0e6f3;box-shadow:inset 0 1px #ffffff16,0 3px 8px #0003}
+.dact2 button.p{background:linear-gradient(120deg,#294e55,#283f5d);color:#b8f6df}
+.dact2 button:hover{box-shadow:0 0 16px #84c4e626}
+
+/* ===== 场景能力 ===== */
+.capwrap{position:relative;display:grid;grid-template-columns:1fr 1fr 1.15fr;gap:100px;padding:4px 24px;flex:1;min-height:0}
+.capwrap svg.lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.capwrap svg.lines path{fill:none;stroke:#7086ac3a;stroke-width:1.3}
+.capwrap svg.lines path.hl{stroke:#75f4d2;stroke-width:2;filter:drop-shadow(0 0 4px #75f4d288)}
+.ccol{display:flex;flex-direction:column;gap:6px;justify-content:center}
+.ccol h4{font-size:10.5px;color:#8b9bb7;letter-spacing:2px;text-align:center;margin-bottom:2px;font-weight:500}
+.cc{border:1px solid #93a9c52b;border-radius:10px;padding:7px 12px;background:linear-gradient(140deg,#293950,#192a40);cursor:pointer;transition:.2s;color:#d8e8f4;box-shadow:inset 0 1px #ffffff0d}
+.cc:hover,.cc.hl{border-color:#9ee8d2;background:linear-gradient(140deg,#2d4a55,#243a58);color:#eafff8}
+.cc b{font-size:12.5px;display:flex;align-items:center;gap:6px;font-weight:550}
+.cc b span{margin-left:auto;display:flex;gap:4px}
+.cc small{font-size:10.5px;color:#94a7bf;display:block;margin-top:2px;line-height:1.4}
+.ph2{font-size:9.5px;padding:1px 6px;border-radius:4px;white-space:nowrap;border:1px solid;font-weight:500}
+.p1{background:#5be1a60d;color:#8becbc;border-color:#5be1a62b}.p2{background:#75f4d210;color:#b5ffe7;border-color:#75f4d235}.p3{background:#8d72de17;color:#c7b9ff;border-color:#9d8ef24d}
+.bg1{background:#8296ff0d;color:#aab9f7;border-color:#8b9eec35}.bg2{background:#dd754b15;color:#ffbd9e;border-color:#ffad7d40}.bg3{background:#ff7f8714;color:#ffa3af;border-color:#ff98a431}
+.road-map{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+.rm{border:1px solid var(--line);border-radius:14px;padding:12px 16px;background:radial-gradient(ellipse at 5% 0%,#2e415745,transparent 60%),linear-gradient(140deg,#182336e8,#0c1525ee);position:relative;box-shadow:inset 0 1px #e5f0ff0d,0 12px 27px #00000032}
+.rm h5{font-size:13.5px;display:flex;align-items:center;gap:8px;margin-bottom:6px;font-weight:550;color:#e1eaf9}
+.rm li{list-style:none;font-size:12px;color:#c2d0e2;line-height:1.6;padding-left:12px;position:relative}
+.rm li::before{content:"";position:absolute;left:0;top:9px;width:4px;height:4px;border-radius:50%;background:#86e6c5}
+.rm .kpi2{position:absolute;right:14px;top:12px;font-size:10.5px;color:#8c9cb3;text-align:right;line-height:1.5}
+.rm .kpi2 b{color:#b5ffe7;font-family:var(--num);font-size:16px}
+.rm.cons li::before{background:var(--org)}
+
+/* ===== 抽屉（对齐 .modal） ===== */
+#drawer{position:absolute;right:-560px;top:0;width:540px;height:100%;background:radial-gradient(ellipse at top right,#40366045,transparent 60%),linear-gradient(145deg,#1c2b40,#101a2d);border-left:1px solid #829bb54d;box-shadow:inset 0 1px #fff2,-30px 0 100px #0008;transition:right .35s ease;padding:18px 20px;display:flex;flex-direction:column;gap:12px;z-index:50}
+#drawer.on{right:0}
+#drawer .dh{display:flex;align-items:center;justify-content:space-between}
+#drawer .dh b{font-size:16px;color:#edfff8;font-weight:550}
+#drawer .x{width:30px;height:30px;border-radius:9px;border:1px solid #53627b45;background:linear-gradient(145deg,#28364c,#111c2c);color:#93b2c4;font-size:15px}
+.ev{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.evi{aspect-ratio:16/9;border-radius:10px;background:linear-gradient(135deg,#15253a,#0f1a2c);border:1px solid #5c78964a;position:relative;overflow:hidden}
+.evi::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.015) 3px 4px)}
+.evi .bb{position:absolute;border:2px solid var(--red);border-radius:3px;box-shadow:0 0 10px #ff829366}
+.evi .bb::before{content:attr(data-l);position:absolute;left:-2px;top:-16px;font-size:9px;background:#ff8293;color:#2a0a10;padding:1px 4px;border-radius:3px;white-space:nowrap;font-weight:600}
+.evi .cap{position:absolute;left:6px;bottom:5px;font-size:10px;color:#c9d6ea;background:#0b1322b0;padding:2px 6px;border-radius:4px}
+.evi .rec{position:absolute;right:6px;top:5px;font-size:9px;color:#ffa3af;display:flex;align-items:center;gap:4px}
+.evi .rec::before{content:"";width:6px;height:6px;border-radius:50%;background:#ff8293;animation:pulse 1s infinite}
+.src{display:flex;flex-wrap:wrap;gap:5px}
+.src span{font-size:10.5px;padding:3px 8px;border-radius:6px;background:var(--card);border:1px solid var(--cardline);color:#a8c7d8}
+.rs{font-size:12.5px;line-height:1.6;color:#d6e1f2}
+.rs li{list-style:none;padding-left:14px;position:relative;margin:2px 0}
+.rs li::before{content:"";position:absolute;left:0;top:10px;width:5px;height:5px;border-radius:50%;background:#9295ff}
+.rs.do li::before{background:#86e6c5;box-shadow:0 0 6px #86e6c588}
+.dact{display:flex;gap:8px;margin-top:auto}
+.dact button{flex:1;padding:11px;border-radius:9px;font-size:13px;background:linear-gradient(135deg,#2a405c,#1d2b42);border:1px solid #7295c340;color:#d0e6f3;box-shadow:inset 0 1px #ffffff16,0 3px 8px #0003}
+.dact button.p{background:linear-gradient(110deg,#a4f5d5,#8bc7f4);color:#0a2a36;border:0;font-weight:600}
+.dact button.d{color:#ffa3af;border-color:#ff98a431}
+.conf{display:flex;align-items:center;gap:10px;font-size:11.5px;color:#8c9cb3}
+.conf .tr{flex:1;height:6px;background:#2b3951;border-radius:3px;overflow:hidden}
+.conf .tr i{display:block;height:100%;background:linear-gradient(90deg,#9295ff,#86e6c5);border-radius:3px}
+.conf b{font-family:var(--num);color:#c7b9ff}
+
+/* ===== 提示 / 页脚 / 动画 ===== */
+#toasts{position:absolute;left:50%;top:140px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:60;pointer-events:none}
+.toast{padding:10px 18px;border-radius:12px;background:#203a46;border:1px solid #86dcc077;color:#d9fff0;font-size:13px;box-shadow:0 10px 30px #0007;animation:slide .4s ease;display:flex;align-items:center;gap:10px}
+.toast i{width:8px;height:8px;border-radius:50%;background:var(--cy);box-shadow:0 0 8px var(--cy)}
+.toast.red i{background:var(--red);box-shadow:0 0 8px var(--red)}.toast.grn i{background:var(--grn);box-shadow:0 0 8px var(--grn)}.toast.org i{background:var(--org);box-shadow:0 0 8px var(--org)}
+footer{height:22px;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#72849e;margin-top:8px;border-top:1px solid #ffffff08;padding-top:7px}
+footer .sep{margin:0 8px;color:#3d4b66}
+@keyframes sculpture-float{0%,100%{transform:perspective(180px) rotateY(-20deg) translateY(0)}50%{transform:perspective(180px) rotateY(10deg) translateY(-5px)}}
+@keyframes panel-reveal{from{opacity:0;translate:0 10px}to{opacity:1;translate:0 0}}
+</style>
+</head>
+<body>
+<div id="stage">
+<header class="hdr">
+  <div class="brand">
+    <div class="brandmark">✚</div>
+    <div><strong>浙江省人民医院</strong><small>ZHEJIANG PROVINCIAL PEOPLE'S HOSPITAL</small></div>
+    <span class="campus">越城院区</span>
+  </div>
+  <div class="heading"><span>安防 AI · 指挥决策台</span><small>YUECHENG / AI SECURITY AGENT &amp; DECISION CENTER</small></div>
+  <div class="headright">
+    <i class="online-dot"></i>AI Agent 运行中<span class="head-divider"></span>
+    <div class="clock"><b id="clk">--:--:--</b><small id="dt"></small></div>
+    <button class="icon-button" id="fs" title="全屏显示" aria-label="全屏显示">⛶</button>
+  </div>
+</header>
+<nav class="nav">
+  <div class="navlinks">
+    <button class="navitem active" data-v="sec">安保指挥 <b id="tab-badge">6</b></button>
+    <button class="navitem" data-v="dec">院长决策</button>
+    <button class="navitem" data-v="hz">危化品台账 <b class="o" id="hz-badge">3</b></button>
+    <button class="navitem" data-v="cap">场景能力</button>
+  </div>
+  <div class="navmeta">
+    <button class="demo-btn" id="demo">▶ 演示：医闹处置闭环</button>
+    <span class="demo-tag">DEMO</span>数字孪生演示环境 · 非实时业务系统
+    <span class="weather"><span class="head-divider"></span>绍兴 · 越城</span>
+  </div>
+</nav>
+
+<!-- ============ 安保指挥 ============ -->
+<main id="v-sec" class="on">
+  <div class="col">
+    <div class="panel" style="flex:1">
+      <div class="ph"><h3>AI 预警流 <span class="tag ai">多源融合研判</span></h3><small><em>ALERT STREAM</em>点击定位到三维院区</small></div>
+      <div class="scroll" style="flex:1"><div class="alist" id="alist"></div></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="kpis" id="kpis"></div>
+    <div class="panel" style="flex:1">
+      <div class="ph"><h3>院区态势 <span class="tag">三维底座 · 预警定位 · 保安位置</span></h3><small><em>LIVE DIGITAL TWIN</em>沿用同事按总平面图与效果图重建的模型 · 尺寸为比例估算</small></div>
+      <div class="map" id="map">
+        <div class="map3d" id="map3d"></div>
+        <div class="overlay" id="overlay"></div>
+        <svg class="mapsvg" id="mapsvg" viewBox="0 0 1000 580"></svg>
+        <div class="mapinfo" id="mapinfo">LIVE DIGITAL TWIN <b>· 拖拽旋转 · 滚轮缩放 · 点楼栋展开楼层 · 点设备看详情</b></div>
+        <div class="maptop">
+          <button data-mv="overview" class="on">全院</button><button data-mv="plan">平面图视角</button><button data-mv="aerial">正上方</button><button id="mrot">⟳ 环绕</button><button id="mcolor">图纸配色</button><button id="mflat">平面示意</button><button id="mpark">▣ 地下车库 B1</button>
+          <a href="../index.html" title="安保数字指挥中心（驾驶舱）">驾驶舱 ↗</a>
+        </div>
+        <div class="legend" id="layers"><span class="lt">感知图层</span>
+          <button class="layer active" data-layer="camera" aria-pressed="true"><i class="layer-dot" style="background:#75f4d2;color:#75f4d2"></i>摄像头 <b>12</b></button>
+          <button class="layer active" data-layer="door" aria-pressed="true"><i class="layer-dot" style="background:#9295ff;color:#9295ff"></i>门禁 <b>4</b></button>
+          <button class="layer active" data-layer="fire" aria-pressed="true"><i class="layer-dot" style="background:#ffc284;color:#ffc284"></i>消防 <b>3</b></button>
+          <button class="layer active" data-layer="patrol" aria-pressed="true"><i class="layer-dot" style="background:#75e9b8;color:#75e9b8"></i>巡更 <b>3</b></button>
+          <i class="sep"></i><span class="lt">预警</span><span><i style="background:var(--red)"></i>紧急</span><span><i style="background:var(--org)"></i>重要</span><span><i style="background:var(--cy)"></i>提示</span><span><i style="background:var(--grn)"></i>保安</span>
+        </div>
+      </div>
+    </div>
+    <div class="panel" style="height:160px">
+      <div class="tlhead"><div><b id="tl-title">处置闭环</b><span class="m" id="tl-sub"></span></div><span class="st" id="tl-st"></span></div>
+      <div class="tl" id="tl"></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="panel">
+      <div class="ph"><h3>六大场景 · 今日</h3><small><em>SCENARIOS</em>右下为近 7 日趋势</small></div>
+      <div class="scene6" id="scene6"></div>
+    </div>
+    <div class="panel">
+      <div class="ph"><h3>车位态势与引导</h3><span class="tag cy">入口车辆特征识别 + 时序预测</span></div>
+      <div id="park"></div>
+      <div class="note warn" style="margin-top:6px"><b>立体车位上层</b>因电动车普遍超 2 吨基本停用，空着却不能停是投诉源。AI 在入口识别电车 / 车长 / 车高，<b>电车直接诱导到 B1 普通区或地面</b>，燃油小车才给上层，LED + 语音按车牌点名引导，不再靠保安喊。</div>
+    </div>
+    <div class="panel" style="flex:1">
+      <div class="ph"><h3>安保力量与布控</h3><small><em>FORCE</em>在岗 <b style="color:#8becbc">32</b>/36 · 6 组 · 院内警务室</small></div>
+      <div class="strip"><div><small>省级涉医风险库</small><b>在线<i>· 今日命中 1</i></b></div><div><small>院内布控名单</small><b>128<i>人 · 命中 1</i></b></div><div><small>融合识别率</small><b style="color:#b5ffe7">87%<i>多特征融合</i></b></div></div>
+      <div class="glist scroll" id="guards" style="flex:1"></div>
+      <div class="note" style="margin-top:8px">人脸被口罩 / 帽子 / 低头拉低时，叠加<b>步态 + 衣着 + 轨迹</b>再判；命中后按风险分级自动派人：一般 2 人跟随，重大 3 人 + 警务室民警。本周误报 <b>6.8%</b>（上周 11.2%）。</div>
+    </div>
+  </div>
+</main>
+
+<!-- ============ 院长决策 ============ -->
+<main id="v-dec">
+  <div class="col">
+    <div class="panel">
+      <div class="ph"><h3>今日院区风险指数</h3><small><em>RISK INDEX</em>06:30 生成 · 每 2 小时刷新</small></div>
+      <div class="gauge">
+        <svg viewBox="0 0 170 110">
+          <path d="M15 95 A70 70 0 0 1 155 95" fill="none" stroke="#284153" stroke-width="12" stroke-linecap="round"/>
+          <path id="garc" d="M15 95 A70 70 0 0 1 155 95" fill="none" stroke="url(#gg)" stroke-width="12" stroke-linecap="round" stroke-dasharray="220" stroke-dashoffset="220"/>
+          <defs><linearGradient id="gg"><stop offset="0" stop-color="#75e9b8"/><stop offset=".55" stop-color="#ffc284"/><stop offset="1" stop-color="#ff8293"/></linearGradient></defs>
+          <text x="85" y="92" text-anchor="middle" fill="#eefff9" font-size="34" font-weight="700" font-family="DIN Alternate,Arial">72</text>
+          <text x="15" y="108" fill="#64748f" font-size="9">平稳</text><text x="155" y="108" fill="#64748f" font-size="9" text-anchor="end">高风险</text>
+        </svg>
+        <div>
+          <div class="gv">72<i>/100</i></div>
+          <span class="lvl">较高 · 较昨日 ↑ 9</span>
+          <p>主要推手：流感季进入上升期、医务科 3 起纠纷在办、今日布控命中 2 人、明晨寒潮 + 大雾（均为演示值）。</p>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><h3>风险因子分解</h3><small><em>FACTORS</em>外部 + 内部</small></div>
+      <div id="factors"></div>
+    </div>
+    <div class="panel" style="flex:1">
+      <div class="ph"><h3>内部运行信号</h3><small><em>INTERNAL</em>HIS / 医务科 / 投诉 / 安保 AI</small></div>
+      <div class="intl">
+        <div><small>医务科在办纠纷</small><b class="r">3<i>起</i></b></div>
+        <div><small>近 7 日投诉</small><b class="o">12<i>条 ↑</i></b></div>
+        <div><small>昨日门急诊</small><b>6,842<i>人次</i></b></div>
+        <div><small>发热门诊 7 日</small><b class="o">+38%</b></div>
+        <div><small>布控命中 · 今日</small><b class="p">2<i>人</i></b></div>
+        <div><small>昨日入场车辆</small><b>2,840<i>辆</i></b></div>
+      </div>
+      <div class="note" style="margin-top:10px">纠纷 #2026-187 家属昨日来院登记、情绪激动，已转入安保 Ⅰ 级布控名单；今晨省级风险库命中 1 人（戴口罩，融合识别 87%），已按重大风险 3 人跟随 + 警务室介入。</div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="panel" style="flex:1.25">
+      <div class="ph"><h3>AI 晨报 · 今日决策建议 <span class="tag ai">大模型生成</span></h3><small><em>MORNING BRIEF</em>11 月 5 日 周四 · 依据 ↔ 动作 · 采纳后自动下发</small></div>
+      <div class="scroll" style="flex:1" id="sugs"></div>
+    </div>
+    <div class="panel" style="flex:1">
+      <div class="ph"><h3>流感季对照 · 流感样病例占比 ILI%</h3><small><em>ILI TREND</em>第 40 周 → 次年第 12 周 · 示意曲线（据公开周报趋势）</small></div>
+      <div class="chart" id="flu"><div class="lg"><span><i style="background:#5b6b86"></i>2023-24</span><span><i style="background:#9295ff"></i>2024-25</span><span><i style="background:#75f4d2"></i>2025-26（H3N2 主导）</span><span><i style="background:#ff8293"></i>2026-27 本季</span></div></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="panel" style="flex:1">
+      <div class="ph"><h3>外部信号流</h3><div class="ftabs" id="ftabs"><button class="on" data-f="all">全部</button><button data-f="w">天气</button><button data-f="p">舆情</button><button data-f="h">热点</button><button data-f="e">往年</button></div></div>
+      <div class="scroll" style="flex:1" id="signals"></div>
+    </div>
+  </div>
+</main>
+
+<!-- ============ 危化品台账 ============ -->
+<main id="v-hz">
+  <div class="col">
+    <div class="panel">
+      <div class="ph"><h3>全院危化品 · 四类汇总</h3><small><em>HAZMAT</em>科室级电子台账 · 每日 06:00 同步</small></div>
+      <div class="hzsum" id="hzsum"></div>
+    </div>
+    <div class="panel">
+      <div class="ph"><h3>从采购到使用 · 电子化覆盖</h3><small>红色环节是现状断点</small></div>
+      <div class="flow"><span class="e">总院审批<em>电子</em></span><i>→</i><span class="e">集中采购<em>电子</em></span><i>→</i><span class="n">科室领用<em>纸质 → 本方案</em></span><i>→</i><span class="n">开柜使用<em>监控倒查 → 自动</em></span><i>→</i><span class="a">月末盘点<em>AI 对账</em></span></div>
+      <div class="note" style="margin-top:10px">现状：采购是电子的，分到科室后只有纸质台账；公安检查靠<b>倒查录像</b>。方案：柜门门磁 + 刷卡 + 柜前摄像头，<b>每次开柜自动截取前后 30 秒录像并绑定领用登记</b>，检查时按科室 / 品名 / 时间一键检索导出。</div>
+    </div>
+    <div class="panel" style="flex:1">
+      <div class="ph"><h3>台账预警</h3><span class="tag org" id="hzcnt">3 待处理</span></div>
+      <div class="scroll" style="flex:1" id="hzalerts"></div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="panel" style="flex:1">
+      <div class="ph"><h3>科室 × 品类 台账 <span class="tag grn">本月</span></h3><small><em>LEDGER</em>点击科室查看开柜事件与录像 · 数量为示例</small></div>
+      <div class="scroll" style="flex:1"><table class="hz" id="hztable"></table></div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="panel" style="flex:1">
+      <div class="ph"><h3 id="hzdept">病理科 · 开柜事件</h3><small><em>CABINET EVENTS</em>门磁 + 刷卡 + 柜前摄像头</small></div>
+      <div class="strip" id="hzstrip"></div>
+      <div class="scroll" style="flex:1" id="hzevents"></div>
+      <div class="dact2"><button class="p" onclick="toast('已生成本月危化品台账与开柜录像索引（PDF + 视频片段清单）','grn')">◎ 公安检查 · 一键导出</button><button onclick="toast('盘点任务已下发科室安全员','cy')">▤ 发起月末盘点</button></div>
+    </div>
+  </div>
+</main>
+
+<!-- ============ 场景能力 ============ -->
+<main id="v-cap">
+  <div class="panel">
+    <div class="ph"><h3>现有设备 → AI 能力 → 应用场景 <span class="tag grn">不换现有设备 · 只做增量</span> <span class="tag">预算档位按院方采购分档示意：≤10 万 / 10~30 万 / ≥30 万</span></h3><small><em>CAPABILITY MAP</em>点任一场景，高亮它依赖的设备与能力</small></div>
+    <div class="capwrap" id="capwrap">
+      <svg class="lines" id="caplines"></svg>
+      <div class="ccol" id="c-dev"><h4>现有设备 / 数据（在其上增量）</h4></div>
+      <div class="ccol" id="c-ai"><h4>AI 能力（边缘盒 + 本地算力 / 云 token）</h4></div>
+      <div class="ccol" id="c-sc"><h4>应用场景 · 阶段 · 预算档位 · 工期</h4></div>
+    </div>
+  </div>
+  <div class="road-map">
+    <div class="rm"><h5><span class="tag grn">一期 · 0–3 月</span>先出亮点</h5><div class="kpi2">目标<br><b>误报 ≤10%</b> · 闭环 ≤10 min</div><ul><li>危化品电子台账 + 开柜录像自动绑定（最快见效）</li><li>布控增强：人脸 + 步态 + 衣着，命中分级派人</li><li>医闹分级预警、停车分流引导、SOS / 手报接入闭环</li></ul></div>
+    <div class="rm"><h5><span class="tag cy">二期 · 3–6 月</span>闭环与决策</h5><div class="kpi2">目标<br><b>晨报采纳率 ≥60%</b></div><ul><li>保安 App 一键派单、到场打卡、取证归档</li><li>地下出入口"软安检"、消防管网感知</li><li>院长 AI 晨报、风险指数、交通 / 人流日报</li></ul></div>
+    <div class="rm"><h5><span class="tag ai">三期 · 6–12 月</span>合并与推广</h5><div class="kpi2">目标<br><b>一院多区</b> 统一指挥</div><ul><li>新院区接入同一套 Agent</li><li>敏感数据本地算力盒，非敏感走云端 token</li><li>模型与指标复制到总院及其他院区</li></ul></div>
+    <div class="rm cons"><h5><span class="tag org">硬约束</span>方案边界</h5><ul><li>现有设备不替换，只做接口对接与局部增加</li><li>不碰 HIS 医生端打标，诊室不录音</li><li>每个场景独立成册：方案 + 预算 + 工期，院方按采购档位自选</li><li>越城院区试点，各院区垂直管理同一思路</li></ul></div>
+  </div>
+</main>
+
+<footer><span><i class="online-dot"></i>　数据链路正常<span class="sep">|</span>数据说明：院区启用时间、流感季趋势来自公开报道；其余指标均为演示值，非实时业务数据</span><span>三维模型为参考图比例重建，非测绘 BIM<span class="sep">/</span>安防 AI 指挥决策台 · 演示数据 · 非实时业务系统</span></footer>
+<aside id="drawer"></aside>
+<div id="toasts"></div>
+</div>
+
+<script src="campus3d.bundle.js"></script>
+<script>
+/* ---------- utils ---------- */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
+function toast(msg,cls){const t=el('div','toast '+(cls||''),'<i></i>'+msg);$('#toasts').appendChild(t);setTimeout(()=>{t.style.opacity=0;t.style.transition='.4s';setTimeout(()=>t.remove(),400)},3400)}
+function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080);const st=$('#stage');st.style.transform=`scale(${s})`;st.style.left=((innerWidth-1920*s)/2)+'px';st.style.top=((innerHeight-1080*s)/2)+'px'}
+addEventListener('resize',fit);
+function tick(){const d=new Date();$('#clk').textContent=d.toTimeString().slice(0,8);$('#dt').textContent=`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} 星期${'日一二三四五六'[d.getDay()]}`}
+setInterval(tick,1000);tick();
+const now=()=>new Date().toTimeString().slice(0,8);
+$('#fs').onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen();}catch{toast('当前窗口不支持全屏，请在浏览器中打开页面','org')}};
+/* 面板鼠标高光（对齐同事版 ui-effects） */
+{let pending=0,last=null;document.addEventListener('pointermove',e=>{const p=e.target.closest('.panel');if(!p)return;last={p,x:e.clientX,y:e.clientY};if(pending)return;pending=requestAnimationFrame(()=>{pending=0;if(!last)return;const r=last.p.getBoundingClientRect();last.p.style.setProperty('--px',((last.x-r.left)/r.width*100)+'%');last.p.style.setProperty('--py',((last.y-r.top)/r.height*100)+'%');});});}
+
+/* ---------- 楼栋：三维锚点 + 平面示意坐标 ---------- */
+const TYPES={riot:{n:'医闹预警',ic:'⚠'},high:{n:'高空预警',ic:'▲'},susp:{n:'可疑人员',ic:'◉'},face:{n:'布控命中',ic:'◎'},park:{n:'车位预警',ic:'P'},fire:{n:'通道/消防',ic:'▣'},sos:{n:'SOS 求助',ic:'✚'},hz:{n:'危化品',ic:'⬢'}};
+const LVN={3:['紧急预警',''],2:['重要预警','org'],1:['提示','cy']};
+const BLD={
+ 1:{b:'b1',p:[-60,24,6],x:400,y:300,w:190,h:110,n:'1号楼',s:'沿街主楼'},
+ 2:{b:'b2',p:[-7,20,2],x:610,y:330,w:150,h:95,n:'2号楼',s:'中央裙房 · 急诊'},
+ 3:{b:'b3',p:[48,50,49],x:400,y:175,w:190,h:100,n:'3号楼',s:'条形楼 · 8F'},
+ 5:{b:'b5',p:[48,53,2],x:205,y:150,w:160,h:125,n:'5号楼',s:'条形楼 · 9F'},
+ 6:{b:'b6',p:[48,53,-45],x:205,y:300,w:160,h:125,n:'6号楼',s:'条形楼 · 9F'},
+ 7:{b:'b7',p:[32,36,-127],x:610,y:175,w:130,h:110,n:'7号楼',s:'独立组团'},
+ 8:{b:'b8',p:[-8,19,-111],x:765,y:175,w:130,h:110,n:'8号楼',s:'弧形连接体'},
+ 9:{b:'b9',p:[-42,36,-129],x:60,y:420,w:120,h:85,n:'9号楼',s:'独立组团'},
+ 10:{b:'b10',p:[90,14,-44],x:790,y:420,w:140,h:85,n:'10号楼',s:'附属楼'},
+ P:{b:null,p:[-92,5,70],x:400,y:470,w:360,h:58,n:'地下车库 B1',s:'坡道口 · 700 位',pk:1},
+ PS:{b:null,p:[102,4,5],x:60,y:150,w:120,h:240,n:'地面停车',s:'东侧',pk:1},
+};
+const GUARDS=[
+ {id:'A1',p:[-30,2,86],sx:560,sy:450,z:'2号楼 急诊入口',s:'处置中',b:1},
+ {id:'A2',p:[-86,2,30],sx:470,sy:420,z:'1号楼 门诊 · 挂号大厅',s:'巡逻'},
+ {id:'A3',p:[8,2,-62],sx:700,sy:300,z:'2号楼北侧 · 跨河连廊',s:'待命'},
+ {id:'A4',p:[-92,4,70],sx:120,sy:120,z:'地库坡道 · 电梯厅',s:'处置中',b:1},
+ {id:'A5',p:[48,48,2],sx:280,sy:135,z:'5号楼 天台',s:'处置中',b:1},
+ {id:'A6',p:[100,2,-30],sx:860,sy:330,z:'8/10号楼 · 东侧停车',s:'巡逻'},
+];
+/* ---------- data: alerts ---------- */
+let alerts=[
+ {id:'A-1042',type:'riot',lv:3,t:'09:12:40',title:'医闹预警 · Ⅱ 级聚集',bld:2,loc:'2号楼 急诊大厅',st:'pending',
+  ai:'聚集 11 人持续 8 分钟，声压 82 dB；人脸命中院内布控名单（医务科在办纠纷 #2026-187 家属，昨日登记）。综合研判：高度疑似纠纷聚集。',conf:.86,
+  src:['摄像头 YC-CAM-203','拾音器 MIC-02','医务科纠纷登记','院内布控名单','省级风险库（未命中）'],
+  ev:[['急诊大厅 · 聚集 11 人','18%,30%,52%,55%'],['纠纷家属 · 命中布控','40%,22%,22%,60%']],
+  why:['人群聚集 ≥ 8 人且 ≥ 5 min（触发 Ⅱ 级阈值）','声压 82 dB 超阈值 80 dB，情绪识别：激动','人脸比对命中 Ⅰ 级布控名单（纠纷 #2026-187）','急诊分诊台 3 分钟内发起 1 次手报呼叫'],
+  do:['派最近 2 名保安：A3（距 60 m）、A1（距 110 m）','通知医务科值班 + 法务到场，启动录音录像留证','分诊台启用隔离通道，减少围观','升级为 Ⅲ 级（横幅 / 肢体冲突）时通知警务室民警并一键 110'],
+  tl:[['发现','09:12:40','AI 合判'],['研判','09:12:52','置信 86%'],['派单','','—'],['到场','','—'],['闭环','','—']],cur:2},
+ {id:'A-1041',type:'face',lv:3,t:'08:52:10',title:'布控命中 · 省级风险库 · 重大风险',bld:'P',loc:'地下车库 B1 电梯厅（非安检口）',st:'dispatched',
+  ai:'省级涉医风险库人员从地库进入，戴口罩，人脸置信仅 52%；叠加步态 + 衣着（黑色羽绒服、灰色鸭舌帽）+ 7 日轨迹后融合置信 87%。判定重大风险。',conf:.87,
+  src:['省级涉医风险库','地库电梯厅摄像头 B1-E2','步态/衣着特征库','挂号记录（无）'],
+  ev:[['B1 电梯厅 · 口罩 · 人脸 52%','38%,22%,24%,60%'],['特征融合 · 轨迹 B1 → 1号楼','10%,15%,80%,70%']],
+  why:['省级涉医风险库命中','地库电梯厅为非安检入口，绕过主入口安检门','未挂号，无就诊预约，目的不明','融合识别 87%：步态、衣着与 3 日前地面摄像头轨迹一致'],
+  do:['重大风险：3 名保安跟随（A4 已到电梯厅，A2 在 1 号楼接应）','通知院内警务室民警 / 协警','不惊动本人，全程录像；进入诊区则医务科陪同'],
+  tl:[['发现','08:52:10','人脸 52%'],['研判','08:52:18','融合 87%'],['派单','08:52:30','A4 · A2 · 警务室'],['到场','08:53:05','A4'],['闭环','','跟随中']],cur:4},
+ {id:'A-1040',type:'high',lv:3,t:'05:42:18',title:'高空滞留预警',bld:5,loc:'5号楼 天台',st:'dispatched',
+  ai:'天台门磁 05:42 非工作时段开启，摄像头检测 1 人于护栏 1.5 m 内滞留 3 分钟，姿态：倚靠护栏。建议立即上楼。',conf:.91,
+  src:['天台门磁 DM-05R','摄像头 YC-CAM-5R1','住院系统 · 在院患者'],
+  ev:[['5号楼天台 · 护栏区滞留','55%,28%,20%,50%'],['天台门 · 非工作时段开启','30%,20%,30%,60%']],
+  why:['门磁在 22:00–06:00 禁入时段开启','人形在护栏 1.5 m 危险区滞留 ≥ 2 min','姿态识别：倚靠 / 攀扶护栏','5号楼 16F 有 1 名患者 05:30 后未在病房（住院系统）'],
+  do:['A5 保安已上楼，护士站同步核查','通知心理科值班、主管医生','天台门临时远程落锁，拦截后再开'],
+  tl:[['发现','05:42:18','AI 合判'],['研判','05:42:25','置信 91%'],['派单','05:42:40','A5 · 护士站'],['到场','05:45:02','A5'],['闭环','','劝离中']],cur:4},
+ {id:'A-1039',type:'sos',lv:2,t:'09:05:33',title:'卫生间 SOS 求助',bld:2,loc:'2号楼 3F 东侧卫生间',st:'pending',
+  ai:'SOS 按钮触发。卫生间内无摄像头，已自动弹出走廊摄像头：2 分钟内 1 名老年患者进入后未出，无陪护。建议最近保安 + 护士站同步前往。',conf:.8,
+  src:['SOS 按钮 S-2F3E','走廊摄像头 YC-CAM-233','护士站呼叫系统'],
+  ev:[['3F 走廊 · 老年患者进入','30%,25%,25%,60%'],['SOS 触发 · 09:05:33','10%,20%,80%,60%']],
+  why:['SOS 触发（原仅接监控室闭路，无弹窗联动）','走廊回放：进入者 72 岁、无陪护、步态不稳','2 分钟未出'],
+  do:['A1 保安 + 3F 护士站同步前往','急诊备轮椅 / 担架','处置结果回写，形成闭环记录'],
+  tl:[['发现','09:05:33','SOS 按钮'],['研判','09:05:40','走廊回放'],['派单','','—'],['到场','','—'],['闭环','','—']],cur:2},
+ {id:'A-1038',type:'susp',lv:2,t:'08:31:05',title:'可疑人员 · 疑似号贩子',bld:1,loc:'1号楼 挂号大厅',st:'pending',
+  ai:'同一人 7 日内第 5 次出现在挂号区，累计停留 6.2 小时，无任何挂号记录，多次与排队者攀谈。',conf:.78,
+  src:['摄像头 YC-CAM-101/102','HIS 挂号记录','人脸聚类（不入库）'],
+  ev:[['挂号大厅 · 目标与排队者攀谈','35%,25%,22%,58%'],['7 日轨迹 · 挂号区 5 次','10%,15%,80%,70%']],
+  why:['7 日内挂号区出现 ≥ 4 次（阈值）','累计停留 6.2 h，无挂号 / 缴费 / 就诊记录','轨迹特征：围绕专家号窗口往返','与 3 名以上陌生人接触'],
+  do:['A2 保安到场核查身份','挂号窗口提示"谨防号贩"','核实后纳入院内布控名单，入院即提示'],
+  tl:[['发现','08:31:05','AI 聚类'],['研判','08:31:20','置信 78%'],['派单','','—'],['到场','','—'],['闭环','','—']],cur:2},
+ {id:'A-1037',type:'park',lv:1,t:'08:45:00',title:'B1 普通区饱和预测 · 电车排队',bld:'P',loc:'地下车库 B1 入口坡道',st:'pending',
+  ai:'B1 普通区占用 96%，预计 09:20 满位；入口排队 7 辆，其中 5 辆电车（不能上立体上层）。建议电车诱导至地面东侧，燃油小车诱导至 B1 机械上层（空 80 位）。',conf:.84,
+  src:['车位引导系统','道闸车牌 + 车型识别','近 4 周周四同时段'],
+  ev:[['入口坡道 · 排队 7 车','5%,40%,90%,45%'],['占用曲线 · 预测 09:20 满位','10%,20%,80%,60%']],
+  why:['B1 普通区 482/500，流入 42 车/10 min','B1 机械上层 100 位仅占 20，限 ≤2 t 燃油车','地面东侧空 16 位，步行 4 min'],
+  do:['入口 LED + 语音按车牌点名："浙D·X1***，请停地面东区"','公众号推送停车指引与实时空位','急救通道保持 2 车位预留'],
+  tl:[['发现','08:45:00','预测模型'],['研判','08:45:00','置信 84%'],['派单','','—'],['到场','','—'],['闭环','','—']],cur:2},
+ {id:'A-1036',type:'hz',lv:2,t:'06:12:48',title:'危化品 · 开柜未登记',bld:3,loc:'病理科 防爆柜 2 号',st:'pending',
+  ai:'06:12 柜门门磁开启 48 秒，刷卡人王**，台账无对应领用登记；已自动截取柜前录像 32 秒。库存推算二甲苯少 5 L。',conf:.9,
+  src:['柜门门磁 HZ-BL-02','刷卡记录','柜前摄像头','危化品电子台账'],
+  ev:[['柜前录像 · 06:12 取出 1 桶','22%,25%,40%,60%'],['台账 · 无登记','10%,15%,80%,70%']],
+  why:['开柜事件无 10 分钟内领用登记','推算库存与台账差 5 L（二甲苯）','非工作时段（06:12）开柜'],
+  do:['通知病理科安全员补登记并核对','录像片段已归档，供公安检查倒查','连续 2 次未登记则通知科主任'],
+  tl:[['发现','06:12:48','门磁 + 刷卡'],['研判','06:13:00','置信 90%'],['派单','','—'],['到场','','—'],['闭环','','—']],cur:2},
+ {id:'A-1035',type:'fire',lv:2,t:'08:20:33',title:'急救通道占用',bld:2,loc:'2号楼 急诊入口',st:'dispatched',
+  ai:'社会车辆 浙D·X1*** 停靠急救通道 ≥ 3 min，已通过车牌关联车主电话短信提醒。',conf:.95,
+  src:['摄像头 YC-CAM-201','道闸车牌库'],
+  ev:[['急诊入口 · 通道占用','20%,35%,55%,45%'],['车牌识别 · 已短信车主','30%,40%,40%,30%']],
+  why:['急救通道占用 ≥ 3 min','车牌关联入场记录，车主可联系'],
+  do:['A1 到场清障','短信已发，5 min 未挪车贴单'],
+  tl:[['发现','08:20:33','AI'],['研判','08:20:35','置信 95%'],['派单','08:20:50','A1'],['到场','08:22:10','A1'],['闭环','','清障中']],cur:4},
+ {id:'A-1034',type:'fire',lv:1,t:'07:58:12',title:'消防管网末端压力偏低',bld:6,loc:'6号楼 12F 末端试水点',st:'closed',
+  ai:'管网压力 0.21 MPa 低于 0.30 阈值（水箱液位正常），疑似阀门未全开；维保已到场复位，压力恢复 0.34 MPa。',conf:.9,
+  src:['管网压力传感（二期局部增加）','水箱液位','消防主机'],ev:[['压力曲线 · 07:40 起下降','10%,20%,80%,60%'],['12F 末端 · 阀门','40%,25%,20%,60%']],
+  why:['末端压力低于阈值','水箱液位正常，排除供水不足'],do:['已闭环：维保复位阀门，压力恢复'],
+  tl:[['发现','07:58:12','压力传感'],['研判','07:58:20','置信 90%'],['派单','07:58:40','后勤维保'],['到场','08:12:00','维保'],['闭环','08:25:30','压力恢复']],cur:5},
+ {id:'A-1031',type:'high',lv:2,t:'昨 21:14',title:'高空抛物',bld:6,loc:'6号楼 东侧外立面',st:'closed',
+  ai:'检测到下落物体（约 0.3 kg），回溯 11F 东侧 1106 窗口，无人员受伤。',conf:.82,
+  src:['外立面摄像头 YC-CAM-6E'],ev:[['外立面 · 下落轨迹','60%,10%,8%,70%'],['回溯 · 11F 1106 窗口','55%,25%,18%,20%']],
+  why:['轨迹检测命中','回溯楼层 11F'],do:['已闭环：护士长沟通家属'],
+  tl:[['发现','21:14:02','AI'],['研判','21:14:10','置信 82%'],['派单','21:14:30','A6'],['到场','21:17:00','A6'],['闭环','21:40:00','已沟通']],cur:5},
+];
+let selected='A-1042';
+
+/* ---------- 3D 底座 ---------- */
+let c3d=null;
+const MAPINFO={campus:'LIVE DIGITAL TWIN <b>· 拖拽旋转 · 滚轮缩放 · 点楼栋展开楼层 · 点设备看详情</b>',floor:'楼层浏览 <b>· 点楼层或层号隔离该层 · 右侧面板返回院区 · Esc 退出</b>',parking:'B1 地下停车场 <b>· 700 位 · 点车位看编号 · 可按区域 / 状态 / 层位筛选 · Esc 退出</b>'};
+function init3D(){
+ try{
+  c3d=Campus3D.mount($('#map3d'),{host:$('#map'),
+   onBuilding:b=>{const key=Object.keys(BLD).find(k=>BLD[k].b===b.id);const list=alerts.filter(a=>String(a.bld)===key&&a.st!=='closed');toast(`${b.name} · 楼层已展开 · 今日预警 ${alerts.filter(a=>String(a.bld)===key).length} 起，待处置 ${list.length} 起`,list.length?'org':'cy');if(list.length){selected=list[0].id;renderAlerts();renderMap();renderTL();}},
+   onDevice:d=>openDeviceDrawer(d),
+   onFloorDevice:(d,type)=>openDeviceDrawer({id:d.id,name:`${d.floor}F ${type} ${d.id.split('-').pop()}`,type:d.type,building:d.building},{floor:d.floor,x:d.x,z:d.z}),
+   onMode:(m,b)=>{$('#mapinfo').innerHTML=m==='floor'?MAPINFO.floor.replace('楼层浏览',`${b.name} 楼层浏览`):MAPINFO[m];$$('[data-mv]').forEach(x=>x.classList.toggle('on',m==='campus'&&x.dataset.mv==='overview'));$('#mpark').classList.toggle('on',m==='parking');},
+   onParkingStats:s=>{const e=$('#b1occ');if(e)e.textContent=s.occupied;}
+  });
+  $('#mapinfo').innerHTML=MAPINFO.campus;
+  const lc=c3d.layerCounts();$$('#layers .layer').forEach(b=>{b.querySelector('b').textContent=lc[b.dataset.layer];b.onclick=()=>{b.classList.toggle('active');b.setAttribute('aria-pressed',b.classList.contains('active'));c3d.setLayer(b.dataset.layer,b.classList.contains('active'))}});
+ }catch(e){console.warn('3D 加载失败，使用平面示意',e);$('#map').classList.add('flat');$('#mapinfo').innerHTML='三维模型加载失败（需 WebGL）<b>· 已切换平面示意</b>';}
+}
+const DEVN={camera:'视频监控',door:'智能门禁',fire:'消防感知',patrol:'安保巡更'};
+function openDeviceDrawer(d,fl){
+  const b=c3d.buildings.find(x=>x.id===d.building);const bname=b?b.name:'';
+  const key=Object.keys(BLD).find(k=>BLD[k].b===d.building);const rel=alerts.filter(a=>String(a.bld)===key&&a.st!=='closed');
+  const code=d.type==='camera'?`YC-CAM-${String(d.id).replace(/\D/g,'').padStart(3,'0')}`:`YC-${d.id}`;
+  const img=(d.type==='camera'&&!fl)?c3d.preview(d):null;
+  const dr=$('#drawer');
+  dr.innerHTML=`<div class="dh"><div><span class="tag cy">${DEVN[d.type]||d.type}</span> <b style="margin-left:6px">${d.name}</b><div style="font-size:11.5px;color:#8c9cb3;margin-top:5px">${code} · ${bname}${fl?` · ${fl.floor}F`:''} · 在线（演示点位）</div></div><button class="x" onclick="closeDrawer()">✕</button></div>
+  ${img?`<div><img class="pv" src="${img}" alt="${d.name} 三维模拟画面"><div class="pvcap"><span>● 三维模拟视角 · 未接入真实视频</span><span>${now()}</span></div></div>`:''}
+  <div class="dinfo"><div><span>设备类型</span>${DEVN[d.type]||d.type}</div><div><span>所属区域</span>${bname}${fl?` ${fl.floor}F`:''}</div><div><span>运行状态</span>正常 · 演示</div><div><span>最近同步</span>${now()}</div>${fl?`<div><span>模型坐标 X / Z</span>${fl.x.toFixed(1)} / ${fl.z.toFixed(1)}</div><div><span>点位绑定</span>跟随楼层展开 / 隔离</div>`:''}</div>
+  ${rel.length?`<div><div class="ph" style="margin-bottom:6px"><h3 style="font-size:12.5px">关联预警 · ${rel.length}</h3></div><div class="rel">${rel.map(a=>`<div onclick="selected='${a.id}';closeDrawer();renderAlerts();renderMap();renderTL();focusAlert(alerts.find(x=>x.id==='${a.id}'))"><span class="lvp ${a.lv===3?'':a.lv===2?'org':'cy'}">${LVN[a.lv][0]}</span>${a.title}<span class="tm">${a.t}</span></div>`).join('')}</div></div>`:''}
+  <div><div class="ph" style="margin-bottom:6px"><h3 style="font-size:12.5px">${d.type==='patrol'?'当前巡更任务':'设备最近记录'}</h3></div><ul class="rs">${d.type==='patrol'?'<li>1号楼入口 → 2号楼外围 → 3/5/6号楼东侧 → 跨河连廊 → 沿街广场</li><li>最近打卡 '+now().slice(0,5)+' · 下次计划 15 分钟后</li>':`<li>${now().slice(0,5)}　设备心跳正常</li><li>整点　设备自检通过</li><li>06:00　状态同步完成</li>`}<li style="color:#64748f">以上为演示记录；真实部署接视频平台实时流 / 录像回放与设备台账。</li></ul></div>
+  <div class="dact">${d.type==='camera'&&!fl?`<button class="p" onclick="toast('真实部署时此处打开视频平台实时流','cy')">打开实时画面</button>`:''}<button onclick="closeDrawer();c3d.reset()">返回全院</button><button onclick="closeDrawer()">关闭</button></div>`;
+  dr.classList.add('on');
+}
+$$('[data-mv]').forEach(b=>b.onclick=()=>{if(!c3d)return;closeDrawer();$$('[data-mv]').forEach(x=>x.classList.toggle('on',x===b));c3d.setView(b.dataset.mv);$('#mrot').classList.remove('on')});
+$('#mpark').onclick=()=>{if(!c3d)return;closeDrawer();if($('#map').classList.contains('flat'))$('#mflat').click();c3d.enterParking()};
+$('#mrot').onclick=function(){if(!c3d)return;this.classList.toggle('on');c3d.setAutoRotate(this.classList.contains('on'))};
+$('#mcolor').onclick=function(){if(!c3d)return;this.classList.toggle('on');c3d.planColors(this.classList.contains('on'))};
+$('#mflat').onclick=function(){const m=$('#map');m.classList.toggle('flat');this.classList.toggle('on',m.classList.contains('flat'));if(c3d){if(m.classList.contains('flat'))c3d.pause();else c3d.resume();}renderMap()};
+
+/* ---------- render: alerts ---------- */
+const STN={pending:'待处置',dispatched:'处置中',closed:'已闭环',watch:'布控中'};
+function lvPill(a){if(a.st==='closed')return `<span class="lvp grn">已闭环</span>`;const l=LVN[a.lv];return `<span class="lvp ${l[1]}">${l[0]}</span>`}
+function renderAlerts(){
+  const box=$('#alist');box.innerHTML='';
+  alerts.forEach(a=>{
+    const d=el('div','al'+(a.id===selected?' sel':'')+(a.fresh?' new':''));a.fresh=false;
+    d.innerHTML=`<div class="top">${lvPill(a)}<span class="st ${a.st}">${STN[a.st]}</span><span class="tm">${a.t}</span></div>
+    <div class="ttl">${a.title}</div>
+    <div class="loc"><span>⌖ ${a.loc}</span><span>${a.src.length} 源合判 · 置信 ${Math.round(a.conf*100)}%</span></div>
+    <div class="ai-line">${a.ai}</div>
+    ${a.st==='pending'?`<div class="acts"><button class="btn p" data-act="dispatch">一键派单</button><button class="btn" data-act="detail">查看证据</button><button class="btn" data-act="false">误报</button></div>`:''}`;
+    d.onclick=e=>{const act=e.target.dataset.act;selected=a.id;renderAlerts();renderMap();renderTL();focusAlert(a);if(act==='dispatch')dispatch(a);else if(act==='false')markFalse(a);else if(act==='detail'||!act&&e.target.closest('.ai-line,.ttl'))openDrawer(a);};
+    box.appendChild(d);
+  });
+  $('#tab-badge').textContent=alerts.filter(a=>a.st==='pending').length;
+  renderKpis();
+}
+function anchorOf(a){const B=BLD[a.bld];return a.p3||B.p}
+function focusAlert(a){if(!c3d||$('#map').classList.contains('flat'))return;const p=anchorOf(a);c3d.flyTo({x:p[0],y:p[1],z:p[2]},150)}
+function dispatch(a){if(a.st!=='pending')return;a.st='dispatched';const g=nearest(a);a.tl[2]=['派单',now(),g.id+' · 最近'];a.tl[3]=['到场','','预计 '+eta(g,a)];a.cur=3;g.s='处置中';g.b=1;moveGuard(g,a);toast(`已派单 ${g.id} 前往 ${a.loc}（距 ${dist(g,a)} m）`,'org');renderAlerts();renderMap();renderTL();renderGuards();}
+function markFalse(a){a.st='closed';a.tl[4]=['闭环',now(),'值班员判误报'];a.cur=5;toast('已标记误报，样本回流训练','grn');renderAlerts();renderMap();renderTL();}
+function dist(g,a){const p=anchorOf(a);return Math.round(Math.hypot(g.p[0]-p[0],g.p[2]-p[2])*1.6)}
+function nearest(a){return GUARDS.filter(g=>!g.b).sort((p,q)=>dist(p,a)-dist(q,a))[0]||GUARDS[2]}
+function eta(g,a){const s=Math.round(dist(g,a)/1.4);const d=new Date(Date.now()+s*1000);return d.toTimeString().slice(0,5)}
+function moveGuard(g,a){const p=anchorOf(a);g.p=[p[0]+6,Math.max(2,p[1]-14),p[2]+8];g.sx=BLD[a.bld].x+BLD[a.bld].w/2+20;g.sy=BLD[a.bld].y+BLD[a.bld].h/2+30;renderMap();}
+
+/* ---------- render: kpis ---------- */
+function renderKpis(){
+  const p=alerts.filter(a=>a.st==='pending').length,c=alerts.filter(a=>a.st==='closed').length;
+  $('#kpis').innerHTML=`
+  <div class="kpi ai"><small>今日 AI 预警</small><b>${alerts.length+7}<i>起</i></b><em>较昨日 −3</em><i class="orb"></i></div>
+  <div class="kpi hot"><small>待处置</small><b>${p}<i>起</i></b><em class="bad">含紧急 ${alerts.filter(a=>a.st==='pending'&&a.lv===3).length}</em><i class="orb"></i></div>
+  <div class="kpi grn"><small>已闭环</small><b>${c+7}<i>起</i></b><em>闭环率 ${Math.round((c+7)/(alerts.length+7)*100)}%</em><i class="orb"></i></div>
+  <div class="kpi cy"><small>平均响应</small><b>1.6<i>min</i></b><em>发现 → 派单</em><i class="orb"></i></div>
+  <div class="kpi"><small>平均闭环</small><b>8.4<i>min</i></b><em>较上周 −2.1</em><i class="orb"></i></div>
+  <div class="kpi"><small>布控融合识别率</small><b>87<i>%</i></b><em>人脸单独识别偏低</em><i class="orb"></i></div>`;
+}
+
+/* ---------- render: map（三维钉 + 平面示意） ---------- */
+function renderMap(){
+  const hot={};alerts.filter(a=>a.st!=='closed').forEach(a=>{const k=String(a.bld);if(!hot[k]||a.lv>hot[k].lv)hot[k]=a});
+  const sel=alerts.find(a=>a.id===selected);
+  if(c3d){
+    const ov=$('#overlay');ov.innerHTML='';const anchors=[];
+    const byPos={};
+    alerts.filter(a=>a.st!=='closed').forEach(a=>{const p=anchorOf(a);const key=p.join(',');byPos[key]=(byPos[key]||0)+1;const lift=(byPos[key]-1)*6;
+      const cl=a.lv===3?'':a.lv===2?'org':'cy';const pin=el('div','pin '+cl+(a.id===selected?' sel':''),`<i></i>${TYPES[a.type].ic} ${TYPES[a.type].n} · ${a.loc.split(' ')[0]}`);
+      pin.onclick=()=>{selected=a.id;renderAlerts();renderMap();renderTL();openDrawer(a)};ov.appendChild(pin);anchors.push({el:pin,x:p[0],y:p[1]+lift,z:p[2],stack:true});});
+    GUARDS.forEach(g=>{const d=el('div','gpin'+(g.b?' b':''),`${g.id}<span>${g.b?'▶ ':''}${g.id}</span>`);ov.appendChild(d);const a={el:d,x:g.p[0],y:g.p[1],z:g.p[2]};if(g.anchor){a.x=g.anchor.x;a.y=g.anchor.y;a.z=g.anchor.z;a.tx=g.p[0];a.ty=g.p[1];a.tz=g.p[2];}g.anchor=a;anchors.push(a);});
+    c3d.setAnchors(anchors);
+    const hl={};for(const k in hot){const B=BLD[k];if(B.b)hl[B.b]=hot[k].lv===3?'#ff8293':hot[k].lv===2?'#ffc284':'#75f4d2';}
+    if(sel&&BLD[sel.bld].b&&!hl[BLD[sel.bld].b])hl[BLD[sel.bld].b]='#75f4d2';
+    c3d.highlight(hl);
+  }
+  const s=$('#mapsvg');
+  let h=`<path class="road" d="M30 460 H970"/><path class="road" d="M380 60 V560"/><path class="road" d="M585 60 V460"/><path class="road2" d="M30 460 H970"/><path class="road2" d="M380 60 V560"/>
+  <text x="500" y="572" fill="#8c9cb3" font-size="12" text-anchor="middle">敬宾路 · 主入口 ▼</text><text x="960" y="45" fill="#8c9cb3" font-size="11" text-anchor="end">N ↑</text>`;
+  for(const k in BLD){const B=BLD[k];const a=hot[k];h+=`<rect class="bld${a?' hot':''}${sel&&String(sel.bld)===k?' sel':''}" x="${B.x}" y="${B.y}" width="${B.w}" height="${B.h}" rx="8" ${B.pk?'stroke-dasharray="5 4"':''}/>
+   <text class="bl" x="${B.x+B.w/2}" y="${B.y+B.h/2-2}">${B.n}</text><text class="bs" x="${B.x+B.w/2}" y="${B.y+B.h/2+14}">${B.s}</text>`;}
+  alerts.filter(a=>a.st!=='closed').forEach(a=>{const B=BLD[a.bld];const cl=a.lv===3?'':a.lv===2?'org':'cy';h+=`<g class="hs ${cl}" transform="translate(${B.x+B.w-18},${B.y+16})"><circle class="r" r="6"/><circle class="c" r="5"/><text x="10" y="4">${TYPES[a.type].ic} ${TYPES[a.type].n}</text></g>`});
+  GUARDS.forEach(g=>{h+=`<g class="guard" transform="translate(${g.sx},${g.sy})"><circle r="7"/><text y="3" fill="#0b2d22" font-size="8" font-weight="700">${g.id}</text><text y="20">${g.s==='处置中'?'▶ ':''}${g.id}</text></g>`});
+  s.innerHTML=h;
+}
+
+/* ---------- render: timeline ---------- */
+function renderTL(){
+  const a=alerts.find(x=>x.id===selected);if(!a)return;
+  $('#tl-title').textContent=a.title;$('#tl-sub').textContent=a.id+' · '+a.loc;
+  const st=$('#tl-st');st.textContent=STN[a.st];st.className='st '+a.st;
+  $('#tl').innerHTML=a.tl.map((s,i)=>`<div class="step ${i<a.cur?'done':i===a.cur?'cur':''}"><i></i><b>${s[0]}</b><small>${s[1]||'—'}</small><span class="who">${s[2]}</span></div>`).join('');
+}
+
+/* ---------- render: scenes / park / guards ---------- */
+function spark(arr,c){const w=56,h=22,mx=Math.max(...arr),mn=Math.min(...arr);const p=arr.map((v,i)=>`${i*(w/(arr.length-1))},${h-2-(v-mn)/(mx-mn||1)*(h-4)}`).join(' ');return `<svg viewBox="0 0 ${w} ${h}"><polyline class="ln" points="${p}" stroke="${c}"/></svg>`}
+function renderScenes(){
+  const S=[['高空预警',2,'滞留 1 · 抛物 1',[1,0,2,1,0,1,2],'#ff8293'],['可疑/布控',5,'号贩 2 · 命中 2 · 夜巡 1',[3,4,2,6,5,4,5],'#ffc284'],['医闹预警',1,'Ⅱ 级 1 · 布控 1',[0,1,0,0,2,0,1],'#ff8293'],['车位/通道',3,'饱和 2 · 通道 1',[2,3,4,2,3,5,3],'#75f4d2'],['危化品',1,'开柜未登记 1',[0,1,0,1,0,0,1],'#ffc284'],['SOS/消防',2,'SOS 1 · 管网 1',[1,0,1,2,0,1,2],'#9295ff']];
+  $('#scene6').innerHTML=S.map(s=>`<div class="sc"><small>${s[0]}</small><b>${s[1]}<i>起</i></b><small style="font-size:10px">${s[2]}</small>${spark(s[3],s[4])}</div>`).join('');
+  const P=[['B1 普通区 A–E',482,500,''],['B1 机械 · 下层',90,100,''],['B1 机械 · 上层（≤2t 燃油）',20,100,'low'],['地面停车',161,226,'']];
+  $('#park').innerHTML=`<div class="strip"><div><small>总车位</small><b>926<i>位</i></b></div><div><small>当前占用</small><b style="color:#ffd9b3">753<i>· 81%</i></b></div><div><small>B1 地库（三维可查）</small><b><span id="b1occ">592</span><i>/ 700</i></b></div></div>`+P.map(p=>{const r=Math.round(p[1]/p[2]*100);return `<div class="bar"><span>${p[0]}</span><div class="tr"><i class="${p[3]||(r>90?'hot':'')}" style="width:${r}%"></i></div><b>${p[1]}/${p[2]}</b></div>`}).join('');
+  renderGuards();
+}
+function renderGuards(){$('#guards').innerHTML=GUARDS.map(g=>`<div><span class="g"><i class="${g.b?'b':''}"></i><b>${g.id}</b> ${g.z}</span><span>${g.s}</span></div>`).join('')+`<div><span class="g"><i></i><b>警务室</b> 1号楼 1F · 民警 1 / 协警 1</span><span>在岗 · 跟随 A-1041</span></div>`}
+
+/* ---------- drawer ---------- */
+function openDrawer(a){
+  const d=$('#drawer');
+  d.innerHTML=`<div class="dh"><div><span class="tag ${a.lv===3?'red':a.lv===2?'org':'cy'}">${TYPES[a.type].n}</span> <b style="margin-left:6px">${a.title}</b><div style="font-size:11.5px;color:#8c9cb3;margin-top:5px">${a.id} · ${a.loc} · ${a.t}</div></div><button class="x" onclick="closeDrawer()">✕</button></div>
+  <div class="ev">${a.ev.map(e=>{const [l,t,w,h]=e[1].split(',');return `<div class="evi"><span class="rec">REC</span><div class="bb" data-l="${e[0].split(' · ')[1]||'目标'}" style="left:${l};top:${t};width:${w};height:${h}"></div><span class="cap">${e[0]}</span></div>`}).join('')}</div>
+  <div class="conf"><span>AI 置信度</span><div class="tr"><i style="width:${a.conf*100}%"></i></div><b>${Math.round(a.conf*100)}%</b></div>
+  <div><div class="ph" style="margin-bottom:6px"><h3 style="font-size:12.5px">数据来源 · ${a.src.length} 源合判</h3></div><div class="src">${a.src.map(s=>`<span>${s}</span>`).join('')}</div></div>
+  <div><div class="ph" style="margin-bottom:6px"><h3 style="font-size:12.5px">AI 研判依据</h3></div><ul class="rs">${a.why.map(w=>`<li>${w}</li>`).join('')}</ul></div>
+  <div><div class="ph" style="margin-bottom:6px"><h3 style="font-size:12.5px">建议处置</h3></div><ul class="rs do">${a.do.map(w=>`<li>${w}</li>`).join('')}</ul></div>
+  <div class="dact">${a.st==='pending'?`<button class="p" onclick="dispatchById('${a.id}')">一键派单最近保安</button><button onclick="upgrade('${a.id}')">升级 · 通知医务科/警务室</button><button class="d" onclick="falseById('${a.id}')">误报</button>`:`<button class="p" onclick="closeDrawer()">${STN[a.st]} · 返回</button>`}</div>`;
+  d.classList.add('on');
+}
+function closeDrawer(){$('#drawer').classList.remove('on')}
+function dispatchById(id){dispatch(alerts.find(a=>a.id===id));closeDrawer()}
+function falseById(id){markFalse(alerts.find(a=>a.id===id));closeDrawer()}
+function upgrade(id){toast('已通知医务科 + 法务值班 + 院内警务室，录音录像留证开启','red');closeDrawer()}
+
+/* ---------- demo: riot closed loop ---------- */
+$('#demo').onclick=function(){
+  this.disabled=true;switchView('sec');closeDrawer();if($('#map').classList.contains('flat'))$('#mflat').click();
+  const a={id:'A-1043',type:'riot',lv:2,t:now(),title:'医闹预警 · Ⅰ 级布控',bld:2,loc:'2号楼 急诊 · 东门',st:'watch',fresh:true,conf:.72,
+   ai:'纠纷 #2026-187 家属 4 人从东门进入，命中院内布控名单（省级库未命中）；手持折叠物品，疑似横幅。建议提前布控。',
+   src:['东门摄像头 YC-CAM-205','院内布控名单','省级风险库','医务科纠纷登记'],
+   ev:[['急诊东门 · 名单命中 4 人','20%,25%,45%,60%'],['手持物 · 疑似横幅','55%,30%,25%,45%']],
+   why:['人脸命中 Ⅰ 级布控名单（纠纷 #2026-187）','同行 4 人，手持折叠物','目的地预测：急诊大厅（昨日纠纷发生地）'],
+   do:['A3 保安提前到急诊大厅','医务科值班人员到场接待，引导至接待室','开启录音录像'],
+   tl:[['发现',now(),'人脸布控'],['研判','','—'],['派单','','—'],['到场','','—'],['闭环','','—']],cur:1};
+  alerts.unshift(a);selected=a.id;renderAlerts();renderMap();renderTL();focusAlert(a);toast('Ⅰ 级布控：纠纷家属 4 人从急诊东门进入','org');
+  const step=(ms,f)=>new Promise(r=>setTimeout(()=>{f();r()},ms));
+  (async()=>{
+    await step(1800,()=>{a.tl[1]=['研判',now(),'置信 72%→88%'];a.conf=.88;a.cur=2;a.ai='4 人进入急诊大厅后展开横幅，声压升至 84 dB，聚集围观 9 人。升级为 Ⅱ 级，建议立即派单。';a.title='医闹预警 · Ⅱ 级（升级）';a.lv=3;a.st='pending';renderAlerts();renderMap();renderTL();toast('升级 Ⅱ 级：展开横幅 + 声压 84 dB','red')});
+    await step(1800,()=>{const g=GUARDS[2];a.tl[2]=['派单',now(),'A3 + A1 · 医务科 · 警务室'];a.cur=3;a.st='dispatched';g.s='处置中';g.b=1;moveGuard(g,a);renderAlerts();renderMap();renderTL();renderGuards();toast('自动派单：A3（60 m）、A1；医务科 + 法务 + 警务室已通知；录像留证开启','org')});
+    await step(2200,()=>{a.tl[3]=['到场',now(),'A3 · 38 s'];a.cur=4;renderTL();toast('A3 到场，家属引导至接待室，大厅恢复通行','cy')});
+    await step(2400,()=>{a.tl[4]=['闭环',now(),'医务科接待 · 留证归档'];a.cur=5;a.st='closed';GUARDS[2].s='待命';GUARDS[2].b=0;renderAlerts();renderMap();renderTL();renderGuards();toast('闭环：全程 7 分 12 秒，证据已归档，纠纷转医务科流程','grn');$('#demo').disabled=false;$('#demo').textContent='↻ 再演示一次'});
+  })();
+};
+
+/* ---------- decision view ---------- */
+const FACT=[['流感季上升期',18,'#ff8293','往年第 45 周起拐点，本院发热门诊 +38%'],['纠纷在办',15,'#ff8293','3 起，其中 1 起家属情绪激动'],['布控命中',10,'#ffc284','省级库 1 人 + 院内名单 1 人'],['天气：寒潮+大雾',12,'#ffc284','明晨降温 8~10 ℃，能见度 <500 m'],['舆情热度',9,'#ffc284','"停车难"吐槽 1 条，热度中'],['周边活动',6,'#75f4d2','11-09 周边赛事，敬宾路临时管制'],['基线',12,'#5b6b86','院区常态风险']];
+function renderFactors(){$('#factors').innerHTML=FACT.map(f=>`<div class="fac"><span class="n">${f[0]}</span><div class="tr"><i style="width:${f[1]/20*100}%;background:${f[2]};box-shadow:0 0 8px ${f[2]}66"></i></div><b>+${f[1]}</b><small>${f[3]}</small></div>`).join('');setTimeout(()=>{$('#garc').style.transition='stroke-dashoffset 1.2s ease';$('#garc').style.strokeDashoffset=220-220*.72},200)}
+const SUGS=[
+ {k:'发热门诊 · 扩容',tag:'red',cf:.88,why:['往年同期（2025-12 初）发热门诊达平时 3~4 倍，H3N2 主导','本院近 7 日发热门诊 +38%，ILI 曲线已过拐点','周四、周末为就诊高峰'],do:['下周一起发热门诊增开 2 个诊室、延时至 21:00','发热门诊外增派 1 组安保维持排队秩序','B1 预留 20 个发热门诊专用车位'],src:'HIS · 省疾控周报 · 往年同期'},
+ {k:'纠纷布控 · 今日',tag:'red',cf:.86,why:['医务科 3 起在办纠纷，#2026-187 家属昨日来院、情绪激动','今晨省级风险库命中 1 人，戴口罩、未挂号，已 3 人跟随','去年同月纠纷聚集事件 2 起，均发生在急诊大厅'],do:['急诊大厅、医务科周边今日增派 2 名保安','警务室民警上午驻点急诊','法务 + 医务科主动约谈 #2026-187 家属，前置化解'],src:'医务科 · 安保 AI · 省级风险库'},
+ {k:'停车交通 · 昨日日报',tag:'cy',cf:.82,why:['昨日入场 2,840 辆，08:30–10:00 高峰，入口排队最长 11 分钟','立体车位上层利用率仅 20%（电车不能上），B1 普通区 09:20 满位','驾驶员看不懂现有引导屏，地库高峰 8 名保安仍管不住'],do:['入口按车型分流：电车 → B1 普通 / 地面，燃油小车 → 立体上层','LED + 语音按车牌点名引导，替代保安喊话','周四上午发热门诊、专家门诊错峰预约停车'],src:'车位引导系统 · 道闸 · 车型识别'},
+ {k:'寒潮 + 大雾 · 明晨',tag:'org',cf:.8,why:['绍兴市气象台：明晨寒潮蓝色 + 大雾黄色预警（示例）','往年寒潮日急诊骨科、心内就诊 +25%，交通事故伤 +18%','大雾导致敬宾路车速下降，入院车流后移 40 min'],do:['急诊骨科、心内明日备班各 +1','后勤今晚完成室外坡道、入口防滑','停车场入口提前 1 小时开放，LED 诱导提前上线'],src:'气象台 · 急诊历史 · 道闸'},
+ {k:'危化品 · 月度核查',tag:'org',cf:.78,why:['病理科今晨开柜未登记 1 次，二甲苯推算差 5 L','药剂科乙醇 95% 台账库存与采购-领用推算差 18 L','公安季度检查预计 11 月下旬，需提供开柜倒查录像'],do:['病理科、药剂科本周完成对账盘点','开柜未登记连续 2 次通知科主任','台账 + 录像索引提前导出备查'],src:'危化品电子台账 · 门磁 · 柜前摄像头'},
+ {k:'舆情回应 · 停车难',tag:'org',cf:.74,why:['社交平台 1 条"越城院区停车难"吐槽，热度中、转发 36','本院公众号昨日推文阅读 2.4 万，具备触达能力','"看着立体车位空着却不让停"是主要抱怨点'],do:['公众号今日推送"停车指引 + 为什么上层只给燃油小车"','与周边 2 处社会停车场谈错时共享（示例）','评论区由宣传科回复，附实时车位查询入口'],src:'舆情监测 · 公众号后台'},
+];
+function renderSugs(){$('#sugs').innerHTML=SUGS.map((s,i)=>`<div class="sug" id="sug${i}"><div class="h"><span class="tag ${s.tag}">${i+1}</span><b>${s.k}</b><span class="cf">置信<i style="--w:${s.cf*100}%"></i></span></div><div class="r"><div><h5>依据</h5><ul>${s.why.map(w=>`<li>${w}</li>`).join('')}</ul></div><div class="do"><h5>建议动作</h5><ul>${s.do.map(w=>`<li>${w}</li>`).join('')}</ul></div></div><div class="f"><button class="btn p" onclick="adopt(${i})">采纳 · 下发</button><button class="btn" onclick="toast('已转人工复核','cy')">转复核</button><span class="src">${s.src}</span></div></div>`).join('')}
+function adopt(i){const d=$('#sug'+i);d.classList.add('ok');d.querySelector('.f').innerHTML=`<span class="tag grn">已采纳 · ${now().slice(0,5)} 下发至相关科室</span><span class="src">${SUGS[i].src}</span>`;toast('建议已下发：'+SUGS[i].k,'grn')}
+function renderFlu(){
+  const w=900,h=190,pl=36,pb=24,pt=12;const weeks=25;
+  const S=[['#5b6b86',[.9,1,1.1,1.2,1.4,1.8,2.4,3.2,4.3,5.3,5.9,5.6,4.8,4,3.3,2.9,2.7,2.6,2.5,2.4,2.2,2,1.8,1.6,1.4]],
+   ['#9295ff',[1,1.1,1.2,1.3,1.5,1.9,2.6,3.6,4.9,6.2,7.1,6.6,5.5,4.4,3.5,3,2.8,2.7,2.5,2.3,2.1,1.9,1.7,1.5,1.3]],
+   ['#75f4d2',[1,1.1,1.3,1.6,2.1,2.9,4.1,5.6,7.3,8.4,8.1,7,5.8,4.6,3.7,3.2,3,2.8,2.6,2.4,2.2,2,1.8,1.6,1.4]],
+   ['#ff8293',[1.1,1.2,1.4,1.7,2.3,3.1]]];
+  const mx=9;const X=i=>pl+i*(w-pl-10)/(weeks-1),Y=v=>h-pb-(v/mx)*(h-pb-pt);
+  let s=`<svg viewBox="0 0 ${w} ${h}">`;
+  for(let v=0;v<=9;v+=3)s+=`<line class="ax" x1="${pl}" x2="${w-10}" y1="${Y(v)}" y2="${Y(v)}" stroke-dasharray="3 5"/><text class="axt" x="${pl-6}" y="${Y(v)+3}" text-anchor="end">${v}%</text>`;
+  ['40','44','48','52','4','8','12'].forEach((t,i)=>s+=`<text class="axt" x="${X(i*4)}" y="${h-6}" text-anchor="middle">第${t}周</text>`);
+  s+=`<rect x="${X(5)}" y="${pt}" width="2" height="${h-pb-pt}" fill="#ff829399"/><text class="axt" x="${X(5)+6}" y="${pt+10}" fill="#ffa3af">本周（第 45 周）</text>`;
+  s+=`<rect x="${X(8)}" y="${pt}" width="${X(12)-X(8)}" height="${h-pb-pt}" fill="#ffc28412"/><text class="axt" x="${X(10)}" y="${pt+10}" text-anchor="middle" fill="#ffcd95">往年峰值区 · 12 月中—1 月初</text>`;
+  S.forEach(([c,d])=>{s+=`<polyline class="cl" stroke="${c}" ${c==='#ff8293'?'stroke-width="3"':''} points="${d.map((v,i)=>`${X(i)},${Y(v)}`).join(' ')}"/>`;if(c==='#ff8293'){const i=d.length-1;s+=`<circle cx="${X(i)}" cy="${Y(d[i])}" r="4" fill="#ff8293"/><polyline class="cl" stroke="#ff8293" stroke-dasharray="4 4" opacity=".6" points="${[3.1,4.2,5.7,7.4,8.6].map((v,j)=>`${X(i+j)},${Y(v)}`).join(' ')}"/><text class="axt" x="${X(i+4)+6}" y="${Y(8.6)}" fill="#ffa3af">预测</text>`}});
+  s+='</svg>';$('#flu').insertAdjacentHTML('beforeend',s);
+}
+const SIG=[
+ {f:'w',ic:'🌡',c:'w',b:'寒潮蓝色预警 + 大雾黄色预警（绍兴市气象台 · 示例）',p:'明晨最低 4 ℃，24 h 降温 8~10 ℃；06:00–09:00 能见度 <500 m。',m:['气象台','今日 11:00'],ai:'急诊骨科 / 心内 +25%，入院车流后移'},
+ {f:'e',ic:'📈',c:'r',b:'往年同期：流感病毒占哨点阳性病原近 45%，H3N2 为主',p:'2025-12-02 新华社援引中国疾控中心；浙江省人民医院发热门诊一周内增至平时 3~4 倍，单日破百，初中生集中发病。',m:['新华社 · 去年同期','2025-12-02'],ai:'本季拐点已现，峰值预计 12 月中旬'},
+ {f:'h',ic:'🚔',c:'p',b:'省级涉医风险库今晨推送 1 条风险人员到院提示',p:'本院融合识别后置信 87%，已分级处置（演示）。',m:['省级风险库','今日 08:52'],ai:'重大风险 · 3 人跟随 + 警务室'},
+ {f:'p',ic:'💬',c:'p',b:'公众号「浙江省人民医院」：冬季呼吸道疾病高发防护指南',p:'阅读 2.4 万、在看 312，评论区 11 条问"越城院区发热门诊几点开"。',m:['公众号后台','昨日 18:30'],ai:'建议回复发热门诊时间，顺带推停车指引'},
+ {f:'p',ic:'🚗',c:'o',b:'舆情：社交平台「越城院区停车难」吐槽 1 条',p:'转发 36、评论 58，情绪中性偏负；抱怨点是"立体车位空着却不让停"，关联周四上午 B1 满位。',m:['舆情监测','今日 08:10'],ai:'热度中，2 日内不回应有扩散风险'},
+ {f:'h',ic:'🏃',c:'w',b:'11-09 周边大型赛事（示例）',p:'敬宾路 06:00–10:00 临时交通管制，赛事医疗保障预计转送本院急诊。',m:['政务公告','昨日'],ai:'急诊 + 北门增派，救护车走北门'},
+ {f:'e',ic:'🧾',c:'g',b:'越城院区启用两年：国家区域医疗中心，与总院一体化管理',p:'2024-01-05 启用，20 余个优势学科入驻；就诊量持续上升是风险基线抬升的根因。',m:['杭州网','2024-01-06'],ai:'安保编制需按就诊量滚动校准'},
+ {f:'h',ic:'📅',c:'g',b:'节假日：距元旦 56 天，本周无假期叠加',p:'往年元旦前一周门诊 +15%，车位压力同步上升。',m:['日历规则','—'],ai:'12 月下旬提前排班'},
+ {f:'p',ic:'📰',c:'p',b:'本院报道：咖啡戒断头痛科普获多平台转载',p:'越城院区神经内科案例被「杭州发布」「北仑发布」转载，正面曝光。',m:['公众号监测','2026-06'],ai:'正面，无需动作'},
+];
+let ftab='all';
+function renderSignals(){$('#signals').innerHTML=SIG.filter(s=>ftab==='all'||s.f===ftab).map(s=>`<div class="sig"><div class="ic ${s.c}">${s.ic}</div><div class="b"><b>${s.b}</b><p>${s.p}</p><div class="m"><span>${s.m[0]}</span><span>${s.m[1]}</span><em>AI：${s.ai}</em></div></div></div>`).join('')}
+$('#ftabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;ftab=b.dataset.f;$$('#ftabs button').forEach(x=>x.classList.toggle('on',x===b));renderSignals()};
+
+/* ---------- hazmat view ---------- */
+const HZC={du:['易制毒','#ff9ad5'],bao:['易制爆','#ff8293'],ran:['易燃','#ffc284'],fu:['腐蚀','#75f4d2']};
+const HZ=[
+ {dept:'病理科',bld:'3号楼 4F',cab:'防爆柜 ×2 · 防腐柜 ×1',st:'warn',last:'今 06:12 · 王** · 未登记',items:[
+   {n:'二甲苯',c:['ran'],u:'L',in:60,use:42,stock:48,calc:53},{n:'甲醛溶液 10%',c:['fu'],u:'L',in:40,use:28,stock:35,calc:35},{n:'无水乙醇',c:['ran'],u:'L',in:50,use:36,stock:29,calc:29},{n:'丙酮',c:['du','ran'],u:'L',in:10,use:6,stock:9,calc:9}],
+  events:[['今 06:12','开柜 48 s · 刷卡 王**','台账无 10 分钟内领用登记；柜前录像已截取 32 s；推算二甲苯差 5 L','bad','未登记'],['昨 15:40','开柜 · 刷卡 李**','领用 二甲苯 5 L → 切片室，登记匹配','ok','已登记'],['昨 09:02','入库 · 采购单 PO-2026-1187','二甲苯 20 L、甲醛溶液 10 L 入柜，双人签收','ok','已登记'],['11-03 16:25','开柜 · 刷卡 王**','领用 无水乙醇 10 L，登记匹配','ok','已登记'],['11-01 08:30','月初盘点','4 品种实物与台账一致','ok','一致']]},
+ {dept:'检验科',bld:'3号楼 2F',cab:'防腐柜 ×2',st:'ok',last:'昨 16:20 · 陈** · 已登记',items:[
+   {n:'浓硫酸',c:['du','fu'],u:'L',in:5,use:3.2,stock:4.1,calc:4.1},{n:'盐酸',c:['du','fu'],u:'L',in:10,use:7,stock:6.5,calc:6.5},{n:'高锰酸钾',c:['du','bao'],u:'kg',in:2,use:.8,stock:2.4,calc:2.4}],
+  events:[['昨 16:20','开柜 · 刷卡 陈**','领用 盐酸 1 L，登记匹配','ok','已登记'],['11-02 10:10','开柜 · 刷卡 陈**','领用 浓硫酸 0.5 L，登记匹配','ok','已登记'],['11-01 08:40','月初盘点','3 品种一致','ok','一致']]},
+ {dept:'药剂科',bld:'1号楼 1F',cab:'防爆柜 ×3',st:'mismatch',last:'今 08:40 · 吴** · 已登记',items:[
+   {n:'乙醇 95%',c:['ran'],u:'L',in:200,use:168,stock:94,calc:112},{n:'过氧化氢 30%',c:['bao'],u:'L',in:20,use:12,stock:16,calc:16}],
+  events:[['今 08:40','开柜 · 刷卡 吴**','领用 乙醇 95% 20 L → 配液室，登记匹配','ok','已登记'],['昨 14:05','AI 对账','乙醇 95% 台账库存 94 L，采购−领用推算 112 L，差 18 L，疑似分装未登记','bad','待核'],['11-02 09:15','入库 · PO-2026-1163','乙醇 95% 100 L，双人签收','ok','已登记']]},
+ {dept:'中心实验室',bld:'8号楼 2F',cab:'防爆柜 ×1 · 防腐柜 ×1',st:'ok',last:'昨 10:05 · 周** · 已登记',items:[
+   {n:'三氯甲烷',c:['du'],u:'L',in:4,use:2.5,stock:3,calc:3},{n:'乙醚',c:['du','ran'],u:'L',in:2,use:1.5,stock:1,calc:1},{n:'硝酸',c:['bao','fu'],u:'L',in:2.5,use:1,stock:2.8,calc:2.8}],
+  events:[['昨 10:05','开柜 · 刷卡 周**','领用 三氯甲烷 0.5 L，登记匹配','ok','已登记'],['11-01 09:00','月初盘点','3 品种一致','ok','一致']]},
+ {dept:'消毒供应中心',bld:'9号楼 1F',cab:'防腐柜 ×1',st:'ok',last:'今 07:30 · 郑** · 已登记',items:[
+   {n:'过氧乙酸',c:['fu','bao'],u:'L',in:30,use:24,stock:18,calc:18}],
+  events:[['今 07:30','开柜 · 刷卡 郑**','领用 过氧乙酸 5 L，登记匹配','ok','已登记'],['11-01 07:30','月初盘点','1 品种一致','ok','一致']]},
+ {dept:'手术室',bld:'2号楼 3F',cab:'防爆柜 ×1',st:'late',last:'昨 21:10 · 孙** · 已登记',items:[
+   {n:'乙醇 75%',c:['ran'],u:'L',in:40,use:31,stock:22,calc:22}],
+  events:[['昨 21:10','开柜 · 刷卡 孙**','领用 乙醇 75% 5 L，登记匹配','ok','已登记'],['10-31','月末盘点','逾期 5 天未提交','bad','逾期']]},
+];
+let hzSel=0;
+const HZST={ok:['正常','grn'],warn:['开柜未登记','red'],mismatch:['库存不符','org'],late:['盘点逾期','org']};
+function renderHz(){
+  const sum={};for(const k in HZC)sum[k]={items:0,depts:new Set(),qty:0};
+  HZ.forEach(d=>d.items.forEach(it=>it.c.forEach(c=>{sum[c].items++;sum[c].depts.add(d.dept);sum[c].qty+=it.stock})));
+  $('#hzsum').innerHTML=Object.keys(HZC).map(k=>`<div class="hzc" style="--c:${HZC[k][1]}"><small>${HZC[k][0]}</small><b>${sum[k].items}<i>品种 · ${sum[k].depts.size} 科室</i></b><em>当前库存 ${sum[k].qty.toFixed(1)} L/kg · 本月盘点 ${k==='ran'?'5/6':'6/6'}</em></div>`).join('');
+  const AL=[['','病理科 · 开柜未登记','今 06:12 王** 开柜 48 s，无领用登记，二甲苯推算差 5 L，录像已截取',0,'紧急'],['org','药剂科 · 库存与采购不符','乙醇 95% 台账 94 L vs 推算 112 L，差 18 L，疑似分装未登记',2,'重要'],['org','手术室 · 月末盘点逾期','10 月盘点逾期 5 天未提交',5,'重要']];
+  $('#hzalerts').innerHTML=AL.map(a=>`<div class="al" onclick="hzPick(${a[3]})"><div class="top"><span class="lvp ${a[0]}">${a[4]}</span></div><div class="ttl">${a[1]}</div><div class="ai-line">${a[2]}</div></div>`).join('');
+  $('#hztable').innerHTML=`<thead><tr><th>科室</th><th>品名 · 类别</th><th style="text-align:right">本月入库</th><th style="text-align:right">本月领用</th><th style="text-align:right">台账库存</th><th>存放</th><th>最近开柜</th><th>状态</th></tr></thead><tbody>`+HZ.map((d,i)=>d.items.map((it,j)=>`<tr class="dept${i===hzSel?' sel':''}" onclick="hzPick(${i})">${j===0?`<td rowspan="${d.items.length}"><b>${d.dept}</b><br><small>${d.bld}</small></td>`:''}<td>${it.n}<br>${it.c.map(c=>`<span class="cls ${c}">${HZC[c][0]}</span>`).join('')}</td><td class="n">${it.in} ${it.u}</td><td class="n">${it.use} ${it.u}</td><td class="n ${it.calc!==it.stock?'lo':''}">${it.stock} ${it.u}${it.calc!==it.stock?`<br><small>推算 ${it.calc}</small>`:''}</td>${j===0?`<td rowspan="${d.items.length}" style="font-size:11px;color:#8c9cb3">${d.cab}</td><td rowspan="${d.items.length}" style="font-size:11px;color:#8c9cb3">${d.last}</td><td rowspan="${d.items.length}"><span class="tag ${HZST[d.st][1]}">${HZST[d.st][0]}</span></td>`:''}</tr>`).join('')).join('')+'</tbody>';
+  const d=HZ[hzSel];$('#hzdept').textContent=d.dept+' · 开柜事件';
+  const opens=d.events.filter(e=>e[1].startsWith('开柜')),bad=opens.filter(e=>e[3]==='bad').length;
+  $('#hzstrip').innerHTML=`<div><small>柜体 · ${d.bld}</small><b style="font-size:12.5px">${d.cab}</b></div><div><small>本月开柜</small><b>${opens.length+6}<i>次 · 未登记 ${bad}</i></b></div><div><small>录像片段 / 门磁</small><b>${opens.length+6}<i>段 · 在线</i></b></div>`;
+  $('#hzevents').innerHTML=d.events.map(e=>`<div class="ev2"><span class="t">${e[0]}</span><div class="b"><b>${e[1]}</b><p>${e[2]}</p>${e[1].startsWith('开柜')?`<div class="clip"><div class="f"><i></i></div><button class="btn" onclick="toast('播放柜前录像 · ${e[0]} · 前后 30 s','cy')">▶ 柜前录像</button><button class="btn" onclick="toast('已绑定领用登记','grn')">绑定登记</button></div>`:''}</div><span class="${e[3]}">${e[4]}</span></div>`).join('');
+}
+function hzPick(i){hzSel=i;renderHz()}
+
+/* ---------- capability view ---------- */
+const DEV=[['视频监控（约 800 路）','门诊 / 急诊 / 病区 / 天台 / 外立面 / 地库电梯厅'],['人脸布控 · 省级库 + 院内名单','省级涉医风险库 + 院方研判名单，口罩帽子场景识别率偏低'],['门禁 · 门磁 · 危化品柜','天台、设备间、药房、ICU、防爆/防腐柜'],['车位引导系统 · 道闸 · 立体车库','900+ 车位，立体上层电车不可用'],['手报 · SOS · 消防主机','SOS 仅接监控室闭路，消防只有水箱液位'],['业务系统','集中采购、医务科纠纷登记、投诉系统（不碰 HIS）']];
+const AIC=[['人形 / 行为 / 姿态识别','滞留、攀爬、聚集、跌倒、横幅'],['多特征人员追踪','人脸 + 步态 + 衣着 + 轨迹，口罩帽子也能跟'],['声压 / 情绪识别','分贝阈值 + 激动情绪（拾音器二期补装）'],['车辆特征 + 时序预测','车型 / 电车识别、饱和预测、按车牌点名引导'],['物体 / 事件检测','抛物、通道占用、开柜事件、压力异常'],['大模型 Agent','多源合判、分级派单、晨报、台账对账、手机联动']];
+const SCN=[
+ ['危化品电子台账 + 开柜录像绑定','p1','bg1','≤10 万 · 6 周',[2,5],[4,5]],
+ ['布控增强 · 特征追踪 · 分级派人','p1','bg2','10~30 万 · 8 周',[0,1],[1,5]],
+ ['医闹分级预警与提前布控','p1','bg2','10~30 万 · 8 周',[0,1,4,5],[0,1,2,5]],
+ ['停车分流引导 + 交通日报','p1','bg2','10~30 万 · 6 周',[3],[3,5]],
+ ['SOS / 手报 / 通道接入处置闭环','p1','bg1','≤10 万 · 4 周',[0,4],[4,5]],
+ ['高空滞留 / 坠落风险','p1','bg1','≤10 万 · 4 周',[0,2],[0,5]],
+ ['地下多个出入口"软安检"','p2','bg3','≥30 万 · 12 周',[0,1],[1,0]],
+ ['消防管网感知 + 高空抛物','p2','bg2','10~30 万 · 10 周',[4,0],[4]],
+ ['院长决策晨报 · 多院区统一指挥','p2','bg2','10~30 万 · 8 周',[5,3,1],[5]],
+];
+function renderCap(){
+  const mk=(c,arr)=>{arr.forEach((d,i)=>{const e=el('div','cc');e.dataset.i=i;e.innerHTML=`<b>${d[0]}</b><small>${d[1]}</small>`;c.appendChild(e)})};
+  mk($('#c-dev'),DEV);mk($('#c-ai'),AIC);
+  SCN.forEach((s,i)=>{const e=el('div','cc');e.dataset.i=i;e.innerHTML=`<b>${s[0]}<span><span class="ph2 ${s[1]}">${s[1]==='p1'?'一期':'二期'}</span><span class="ph2 ${s[2]}">${s[3]}</span></span></b><small>依赖 ${s[4].length} 类设备 · ${s[5].length} 项能力</small>`;e.onclick=()=>hl(i);$('#c-sc').appendChild(e)});
+  requestAnimationFrame(()=>drawLines());
+}
+let hlIdx=0;
+function drawLines(){
+  const wrap=$('#capwrap'),svg=$('#caplines');if(!wrap.offsetWidth)return;const R=wrap.getBoundingClientRect();const sc=R.width/wrap.offsetWidth;
+  const pos=(sel,i,side)=>{const e=$$(sel)[i];const r=e.getBoundingClientRect();return {x:(side==='r'?r.right:r.left)/sc-R.left/sc,y:(r.top+r.height/2)/sc-R.top/sc}};
+  let h='';
+  SCN.forEach((s,i)=>{const on=i===hlIdx;s[5].forEach(a=>{s[4].forEach(d=>{if(!on&&s[5].indexOf(a)>0)return;const p1=pos('#c-dev .cc',d,'r'),p2=pos('#c-ai .cc',a,'l');h+=`<path class="${on?'hl':''}" d="M${p1.x} ${p1.y} C${p1.x+60} ${p1.y} ${p2.x-60} ${p2.y} ${p2.x} ${p2.y}"/>`});const p2=pos('#c-ai .cc',a,'r'),p3=pos('#c-sc .cc',i,'l');h+=`<path class="${on?'hl':''}" d="M${p2.x} ${p2.y} C${p2.x+60} ${p2.y} ${p3.x-60} ${p3.y} ${p3.x} ${p3.y}"/>`})});
+  svg.innerHTML=h;
+  $$('#c-sc .cc').forEach((e,i)=>e.classList.toggle('hl',i===hlIdx));
+  $$('#c-dev .cc').forEach((e,i)=>e.classList.toggle('hl',SCN[hlIdx][4].includes(i)));
+  $$('#c-ai .cc').forEach((e,i)=>e.classList.toggle('hl',SCN[hlIdx][5].includes(i)));
+}
+function hl(i){hlIdx=i;drawLines()}
+
+/* ---------- views ---------- */
+function switchView(v){$$('.navitem').forEach(b=>b.classList.toggle('active',b.dataset.v===v));$$('main').forEach(m=>m.classList.toggle('on',m.id==='v-'+v));if(v==='cap')setTimeout(drawLines,30);if(v==='dec'&&!$('#flu svg')){renderFlu();renderFactors()}if(c3d){if(v==='sec'&&!$('#map').classList.contains('flat'))c3d.resume();else c3d.pause();}}
+$$('.navitem').forEach(b=>b.onclick=()=>switchView(b.dataset.v));
+
+/* ---------- live injection ---------- */
+const LIVE=[{type:'park',lv:1,title:'急诊临时车位将满',bld:'PS',loc:'地面 · 急诊临时停车',ai:'急诊临时车位 44/46，预计 12 分钟后满位，建议提前诱导。',conf:.8,src:['车位检测器','道闸'],ev:[['急诊临时 · 44/46','10%,30%,70%,50%'],['入口排队 2 车','20%,30%,50%,40%']],why:['占用 ≥ 95%'],do:['入口诱导至地面东侧'],},
+ {type:'susp',lv:2,title:'夜间病区徘徊（回放核验）',bld:6,loc:'6号楼 12F 走廊',ai:'非探视时段 1 人在 12F 走廊往返 4 次、尝试 2 扇病房门，无住院/陪护记录。',conf:.76,src:['走廊摄像头','陪护登记'],ev:[['12F 走廊 · 往返','20%,30%,50%,50%'],['尝试病房门','45%,25%,25%,55%']],why:['非探视时段','无陪护登记'],do:['护士站 + 保安核查'],}];
+let li=0;
+setInterval(()=>{if(li>=LIVE.length)return;const b=LIVE[li++];const a={id:'A-'+(1044+li),t:now(),st:'pending',fresh:true,tl:[['发现',now(),'AI'],['研判',now(),'置信 '+Math.round(b.conf*100)+'%'],['派单','','—'],['到场','','—'],['闭环','','—']],cur:2,...b};alerts.unshift(a);renderAlerts();renderMap();toast('新预警：'+a.title+' · '+a.loc,a.lv===2?'org':'cy')},38000);
+
+/* ---------- init ---------- */
+fit();init3D();renderAlerts();renderMap();renderTL();renderScenes();renderSugs();renderSignals();renderHz();renderCap();
+/* 支持 #sec / #dec / #hz / #cap 直接打开某个视图；#parking 直接进地库；#floor-b5 直接展开 5 号楼，便于演示与截图 */
+{const h=location.hash.slice(1);if(['sec','dec','hz','cap'].includes(h))switchView(h);
+ else if(c3d&&h==='parking'){switchView('sec');setTimeout(()=>c3d.enterParking(),600);}
+ else if(c3d&&h.startsWith('floor-')){switchView('sec');const b=c3d.buildings.find(x=>x.id===h.slice(6));if(b)setTimeout(()=>c3d.enterBuilding(b),600);}}
+</script>
+</body>
+</html>
