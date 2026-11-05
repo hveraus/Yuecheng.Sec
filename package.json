@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "python3 -m http.server 5174 --directory dist",
-    "check": "node --check dist/app.js && node --check dist/campus-model.js && node --check dist/floor-browser.js && node --check dist/floor-interior.js && node --check dist/landscape.js && node --check dist/parking.js && node --check dist/ui-effects.js && node --check dist/transitions.js",
-    "test": "node tests/interaction.test.mjs && node tests/floors.test.mjs && node tests/parking.test.mjs && node tests/transitions.test.mjs"
+    "check": "node --check dist/app.js && node --check dist/campus-model.js && node --check dist/floor-browser.js && node --check dist/floor-interior.js && node --check dist/landscape.js && node --check dist/parking.js && node --check dist/ui-effects.js && node --check dist/transitions.js && node --check dist/safety-index.js && node --check dist/safety-panel.js && node --check dist/screen-layout.js",
+    "test": "node tests/interaction.test.mjs && node tests/floors.test.mjs && node tests/parking.test.mjs && node tests/transitions.test.mjs && node tests/safety-index.test.mjs"
   },
   "devDependencies": {
     "three": "0.180.0"
