@@ -10,16 +10,27 @@ export function floorDevices(b,floor){
  const dx=b.kind==='crescent'?5:b.w*.2, dz=b.kind==='crescent'?17:b.d*.18;
  return [['camera',-dx,-dz],['camera',dx,dz],['door',0,0],['fire',dx,-dz]].map(([type,ox,oz],i)=>({id:`${b.id.toUpperCase()}-${floor}F-${type.toUpperCase()}-${i+1}`,building:b.id,floor,type,x:x+ox,y:b.base+(floor-1)*step+1.2,z:z+oz}));
 }
-export function createFloorBrowser({scene,camera,controls,meshes,host,onExit,onFocus,onDevice,motionEnabled=()=>true}){
- let building=null,chosen=null,saved=[],floors=[],points=[],floorLabels=[],counts=[],interiors=[],interiorLabels=[],interiorVisible=true,transition=null,viewBlend=1;
+export function createFloorBrowser({scene,camera,controls,meshes,host,onExit,onFocus,onDevice,motionEnabled=()=>true,onExpand=()=>{}}){
+ let building=null,chosen=null,saved=[],floors=[],points=[],floorLabels=[],counts=[],interiors=[],interiorLabels=[],interiorVisible=true,transition=null,viewBlend=1,previousMinDistance=95;
  const root=new THREE.Group();root.name='楼栋分层';scene.add(root);
  const overlay=document.createElement('div');overlay.className='floor-overlays';host.appendChild(overlay);
  const panel=document.createElement('section');panel.className='floor-panel';panel.hidden=true;host.appendChild(panel);
  const cue=document.createElement('div');cue.className='floor-transition-cue';cue.hidden=true;host.appendChild(cue);
  const symbol={camera:'◉',door:'▥',fire:'♧'},names={camera:'摄像头',door:'门禁',fire:'消防'};
- function exit(){transition?.cancel();transition=null;host.classList.remove('floor-transitioning');cue.hidden=true;if(!building)return;camera.clearViewOffset();saved.forEach(([o,v])=>o.visible=v);saved=[];counts.forEach(([el,value])=>el.textContent=value);counts=[];chosen=null;for(const g of floors)g.traverse(o=>{if(o.isMesh){if(o.userData.interiorOwned){o.geometry.dispose();o.material.map?.dispose();}o.material.dispose();}});root.clear();overlay.replaceChildren();panel.hidden=true;building=null;floors=[];points=[];floorLabels=[];interiors=[];interiorLabels=[];host.classList.remove('floor-active');}
- function focus(){onFocus();const box=new THREE.Box3();root.updateMatrixWorld(true);floors.filter(g=>g.visible).forEach(g=>box.expandByObject(g));const size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());const span=Math.max(size.x/Math.max(camera.aspect,.5),size.z,size.y,30);const dist=span/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)))*1.45;controls.target.copy(center);camera.position.copy(center).add((chosen===null?new THREE.Vector3(-.7,.95,1):new THREE.Vector3(-.25,1.5,.65)).normalize().multiplyScalar(dist));controls.update();}
- function show(floor){if(!building)return;transition?.cancel();transition=null;
+ function exit(){transition?.cancel();transition=null;host.classList.remove('floor-transitioning');cue.hidden=true;if(!building)return;controls.minDistance=previousMinDistance;camera.clearViewOffset();saved.forEach(([o,v])=>o.visible=v);saved=[];counts.forEach(([el,value])=>el.textContent=value);counts=[];chosen=null;for(const g of floors)g.traverse(o=>{if(o.isMesh){if(o.userData.interiorOwned){o.geometry.dispose();o.material.map?.dispose();}o.material.dispose();}});root.clear();overlay.replaceChildren();panel.hidden=true;building=null;floors=[];points=[];floorLabels=[];interiors=[];interiorLabels=[];host.classList.remove('floor-active');}
+ function focus(){
+  onFocus();const box=new THREE.Box3();root.updateMatrixWorld(true);floors.filter(g=>g.visible).forEach(g=>box.expandByObject(g));
+  const center=box.getCenter(new THREE.Vector3()),direction=(chosen===null?new THREE.Vector3(-.7,.95,1):new THREE.Vector3(-.25,1.5,.65)).normalize();
+  const right=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),direction).normalize(),up=new THREE.Vector3().crossVectors(direction,right).normalize();
+  const w=host.clientWidth,h=host.clientHeight,compact=w<=720;
+  const usableW=Math.max(w-(compact?50:panel.offsetWidth+100),100),usableH=Math.max(h-(compact?panel.offsetHeight+330:220),120);
+  const tanV=Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*usableH/h,tanH=Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*camera.aspect*usableW/w;
+  let distance=15;
+  for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z]){const p=new THREE.Vector3(x,y,z).sub(center);distance=Math.max(distance,Math.max(Math.abs(p.dot(right))/tanH,Math.abs(p.dot(up))/tanV)+p.dot(direction));}
+  controls.target.copy(center);camera.position.copy(center).addScaledVector(direction,distance*1.08);controls.update();
+ }
+
+ function show(floor){if(!building)return;onExpand();transition?.cancel();transition=null;
  const fromBlend=viewBlend;const fromCamera=camera.position.clone(),fromTarget=controls.target.clone();const starts=floors.map(g=>({position:g.position.clone(),visible:g.visible}));chosen=floor;document.querySelectorAll('[data-layer]').forEach(el=>{const count=el.querySelector('b');if(count)count.textContent=String(({camera:2,door:1,fire:1,patrol:0}[el.dataset.layer]??0)*(floor===null?building.floors:1));});floors.forEach((g,i)=>{g.visible=floor===null||floor===i+1;g.position.y=floor===null?i*9:-building.base-i*(building.h-building.base)/building.floors;g.position.x=0;});interiors.forEach(({group})=>group.visible=interiorVisible);floors.forEach(g=>g.children.filter(m=>m.userData.envelope).forEach(m=>m.visible=!(chosen!==null&&interiorVisible)));panel.querySelector('.floor-current').textContent=floor===null?'各层展开 · 点击楼层查看':`${floor}F · 单层隔离 · 4 个演示点位`;panel.querySelectorAll('[data-floor]').forEach(b=>b.classList.toggle('active',Number(b.dataset.floor)===floor));panel.querySelector('[data-action="explode"]').classList.toggle('active',floor===null);focus();
  const toCamera=camera.position.clone(),toTarget=controls.target.clone();const ends=floors.map(g=>({position:g.position.clone(),visible:g.visible}));
  if(!motionEnabled()){viewBlend=1;floors.forEach(g=>g.traverse(m=>{const state=m.userData.motionMaterial;if(state)Object.assign(m.material,state);}));host.classList.remove('floor-transitioning');cue.hidden=true;return;}
@@ -34,7 +45,7 @@ export function createFloorBrowser({scene,camera,controls,meshes,host,onExit,onF
  },onComplete:()=>{viewBlend=1;floors.forEach((g,i)=>{g.position.copy(ends[i].position);g.visible=ends[i].visible;});for(const state of materialStates){state.m.material.opacity=state.opacity;state.m.material.transparent=state.transparent;state.m.material.depthWrite=state.depthWrite;}host.classList.remove('floor-transitioning');cue.hidden=true;transition=null;}});
  transition.step(performance.now());
  }
- function enter(b){exit();viewBlend=0;counts=[...document.querySelectorAll('[data-layer] b')].map(el=>[el,el.textContent]);building=b;host.classList.add('floor-active');saved=scene.children.filter(o=>o!==root&&!o.isLight).map(o=>[o,o.visible]);saved.forEach(([o])=>o.visible=false);
+ function enter(b){exit();previousMinDistance=controls.minDistance;controls.minDistance=12;viewBlend=0;counts=[...document.querySelectorAll('[data-layer] b')].map(el=>[el,el.textContent]);building=b;host.classList.add('floor-active');saved=scene.children.filter(o=>o!==root&&!o.isLight).map(o=>[o,o.visible]);saved.forEach(([o])=>o.visible=false);
   for(let f=1;f<=b.floors;f++){const g=new THREE.Group();root.add(g);floors.push(g);const sources=meshes.filter(m=>m.userData.building.id===b.id&&m.userData.floor===f);for(let j=0;j<sources.length;j++){const source=sources[j],m=new THREE.Mesh(source.geometry,source.material.clone());m.position.copy(source.position);m.userData.floor=f;m.userData.envelope=j!==0;m.material.wireframe=false;m.material.transparent=j!==0;m.material.opacity=j===0?1:.12;m.material.depthWrite=j===0;g.add(m);}
    const interior=buildInterior(b,f);g.add(interior.group);interiors.push(interior);
    for(const marker of interior.markers){const el=document.createElement('span');el.className=`interior-label ${marker.kind}`;el.textContent=marker.label;overlay.appendChild(el);interiorLabels.push({el,group:g,position:marker.position,interior:true});}
