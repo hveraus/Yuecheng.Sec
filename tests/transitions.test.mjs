@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {createTransition,easeInOut,phase} from '../dist/transitions.js';
+assert.equal(easeInOut(-1),0);assert.equal(easeInOut(2),1);assert.equal(easeInOut(.5),.5);
+assert.equal(phase(.2,.3,.9),0);assert.equal(phase(1,.3,.9),1);
+let samples=[],completed=0;
+const t=createTransition({duration:1200,start:100,onUpdate:p=>samples.push(p),onComplete:()=>completed++});
+t.step(100);t.step(700);t.step(1300);t.step(1800);assert.deepEqual(samples,[0,.5,1]);assert.equal(completed,1);assert(!t.active);
+const canceled=createTransition({duration:1000,start:0,onUpdate:()=>assert.fail('Canceled transition must not mutate the scene')});canceled.cancel();canceled.step(1000);canceled.finish();
+let progress=0;const settled=createTransition({duration:1000,start:0,onUpdate:p=>progress=p});settled.step(400);settled.finish();assert.equal(progress,1);assert(!settled.active);
+const immediate=createTransition({duration:0,start:100,onUpdate:p=>assert.equal(p,1)});immediate.step(100);
+console.log('PASS: exact transition endpoints, easing phases, single completion, interruption and instant settling');
