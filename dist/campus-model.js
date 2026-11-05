@@ -65,9 +65,9 @@ export function buildCampus(scene,{buildingMeshes,buildingGroups}){
   if(b.base&&b.kind==='annex')slab(worldShape(b.w+4,b.d+5,7,b.x,b.z),0,b.base,palette.wall,group,b);
   for(let f=0;f<b.floors;f++){
    const y=base+f*step;
-   slab(footprint(b.kind==='tower'&&f<2?1:0),y,.58,palette.band,group,b);
-   slab(footprint(1.1),y+.58,step-.72,palette.glass,group,b);
-   slab(footprint(),y+step-.14,.14,palette.wall,group,b);
+   slab(footprint(b.kind==='tower'&&f<2?1:0),y,.58,palette.band,group,b).userData.floor=f+1;
+   slab(footprint(1.1),y+.58,step-.72,palette.glass,group,b).userData.floor=f+1;
+   slab(footprint(),y+step-.14,.14,palette.wall,group,b).userData.floor=f+1;
   }
   slab(footprint(-.8),b.h,.65,palette.band,group,b);
   if(b.kind==='crescent'){
