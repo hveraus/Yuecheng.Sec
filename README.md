@@ -1,6 +1,8 @@
 # 越城院区智慧安保驾驶舱
 
-基于 Three.js 的交互演示。执行 `npm run dev`，访问 http://localhost:5174。
+基于 Three.js 的交互演示。需要 Node.js、npm 和 Python 3。执行 `npm ci` 安装测试依赖，再执行 `npm run dev`，访问 http://localhost:5174。
+
+执行 `npm run check` 检查语法，执行 `npm test` 运行交互、楼层、车位与动画测试。网页运行所需的 Three.js 模块已包含在 `dist/vendor` 中。
 
 ## 当前院区模型
 
