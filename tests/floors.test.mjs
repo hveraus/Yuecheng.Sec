@@ -20,3 +20,16 @@ for(const b of campusBuildings){
  }
 }
 console.log(`PASS: ${campusBuildings.length} buildings, ${count/4} floors, ${count} unique floor-bound devices inside slab geometry`);
+const {interiorLayout}=await import('../dist/floor-interior.js');
+let roomCount=0;
+for(const b of campusBuildings)for(let f=1;f<=b.floors;f++){
+ const layout=interiorLayout(b,f),slab=buildingMeshes.find(m=>m.userData.building.id===b.id&&m.userData.floor===f);
+ assert.equal(layout.rooms.filter(r=>r.kind==='stairs').length,2);
+ assert.equal(layout.rooms.filter(r=>r.kind==='lift').length,1);
+ for(const room of [...layout.rooms,layout.corridor])for(const dx of [-.5,0,.5])for(const dz of [-.5,0,.5]){
+  const ray=new THREE.Raycaster(new THREE.Vector3(room.x+dx*room.w,layout.y+10,room.z+dz*room.d),new THREE.Vector3(0,-1,0));
+  assert(ray.intersectObject(slab).length,`${b.id} ${f}F ${room.label||'corridor'} must remain inside slab`);
+ }
+ roomCount+=layout.rooms.length;
+}
+console.log(`PASS: ${roomCount} room/core zones remain inside floors; two stairs and one lift per floor`);
