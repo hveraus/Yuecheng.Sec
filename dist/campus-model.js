@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {createFlowingWater,addLandscape} from './landscape.js';
 
 // Relative reconstruction from the two supplied images, not surveyed coordinates.
 // x follows the long axis of 3/5/6; z runs from the annex to the main courtyard.
@@ -21,7 +22,7 @@ export const campusDevices = [
  ['P01','一号巡逻组','patrol',-95,3,42,'b1'],['P02','二号巡逻组','patrol',92,3,75,'b3'],['P03','三号巡逻组','patrol',15,3,-150,'b7'],
 ].map(([id,name,type,x,y,z,building])=>({id,name,type,position:new THREE.Vector3(x,y,z),building}));
 export const campusView={
- overview:{position:new THREE.Vector3(-290,239,-325),target:new THREE.Vector3(0,6,-28)},
+ overview:{position:new THREE.Vector3(-325,265,-360),target:new THREE.Vector3(0,6,-28)},
  plan:{position:new THREE.Vector3(-150,350,400),target:new THREE.Vector3(0,0,-27)},
  aerial:{position:new THREE.Vector3(-.1,435,-27),target:new THREE.Vector3(0,0,-27)},
 };
@@ -34,16 +35,16 @@ function worldShape(w,d,r,x,z){const s=rounded(w,d,r);return new THREE.Shape(s.g
 
 export function buildCampus(scene,{buildingMeshes,buildingGroups}){
  const solid=(color,roughness=.8,metalness=.1)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
- const palette={wall:solid(0xb6ced8,.48,.25),band:solid(0xd6e4e8,.55,.15),glass:solid(0x284e64,.23,.55),roof:solid(0xdbe4df),green:solid(0x477c65),path:solid(0xa8b4b0),ground:solid(0x17372f),pave:solid(0x445966),road:solid(0x213744),water:solid(0x2c8197,.2,.55)};
+ const palette={wall:solid(0xb6ced8,.48,.25),band:solid(0xd6e4e8,.55,.15),glass:solid(0x234b61,.2,.45),roof:solid(0xdbe4df),green:solid(0x477c65),path:solid(0xa8b4b0),ground:solid(0x243e32),pave:solid(0x445966),road:solid(0x213744),water:solid(0x2c8197,.2,.55)};
  const colored=[];let planColor=false,wire=false;
- function slab(s,y,h,mat,parent=scene,b=null){const m=new THREE.Mesh(geometry(s,h),mat);m.position.y=y;parent.add(m);if(b){m.userData.building=b;buildingMeshes.push(m);colored.push({m,original:mat,color:b.color});}return m;}
+ function slab(s,y,h,mat,parent=scene,b=null){const m=new THREE.Mesh(geometry(s,h),mat);m.position.y=y;m.receiveShadow=true;m.castShadow=!!b;parent.add(m);if(b){m.userData.building=b;buildingMeshes.push(m);colored.push({m,original:mat,color:b.color});}return m;}
  function block(w,h,d,x,y,z,mat,parent=scene){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);parent.add(m);return m;}
  function line(points,color=0x548a9d,opacity=.6,parent=scene){const g=new THREE.BufferGeometry().setFromPoints(points.map(p=>new THREE.Vector3(...p)));const m=new THREE.Line(g,new THREE.LineBasicMaterial({color,transparent:true,opacity}));parent.add(m);return m;}
  function decal(text,x,z,w,d,rotation=0,color='#8caeb8'){const c=document.createElement('canvas');c.width=1024;c.height=128;const ctx=c.getContext('2d');ctx.font='500 55px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=color;ctx.fillText(text,512,64);const mat=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false});const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),mat);m.rotation.set(-Math.PI/2,0,rotation);m.position.set(x,.36,z);scene.add(m);}
  // Site board and a quiet urban grid retain the command-center context.
- slab(worldShape(280,294,20,0,-25),-4,3,palette.pave);
- slab(worldShape(277,291,19,0,-25),-1,1,palette.ground);
- const outline=worldShape(280,294,20,0,-25).getPoints(90).map(p=>[p.x,-.9,-p.y]);line([...outline,outline[0]],0x5aa1b6,.7);
+ slab(worldShape(330,350,24,0,-12),-4,3,palette.pave);
+ slab(worldShape(327,347,23,0,-12),-1,1,palette.ground);
+ const outline=worldShape(330,350,24,0,-12).getPoints(90).map(p=>[p.x,-.9,-p.y]);line([...outline,outline[0]],0x5aa1b6,.7);
  const grid=new THREE.GridHelper(900,75,0x214d61,0x102b3a);grid.position.set(0,-4.1,-25);scene.add(grid);
  // Jingbin Road runs along the curved main building, as labelled in the plan.
  block(16,.12,270,-114,.1,-26,palette.road);block(230,.12,12,4,.1,100,palette.road);block(12,.12,245,119,.1,-18,palette.road);block(228,.12,10,0,.1,-161,palette.road);
@@ -51,9 +52,9 @@ export function buildCampus(scene,{buildingMeshes,buildingGroups}){
  for(let x=-99;x<115;x+=12){block(5,.05,.25,x,.2,100,palette.path);}
  decal('敬　宾　路',-115,-15,66,5,Math.PI/2);decal('越 城 院 区',-3,110,80,6);decal('院 内 环 路',111,27,47,4,Math.PI/2);
  // Winding landscape waterway divides the annex from the main hospital.
- const river=new THREE.Shape();river.moveTo(-104,101);river.bezierCurveTo(-70,83,-32,99,15,84);river.bezierCurveTo(62,70,91,85,107,110);river.lineTo(115,109);river.bezierCurveTo(101,69,63,57,14,71);river.bezierCurveTo(-31,87,-73,70,-104,87);river.closePath();slab(river,.12,.18,palette.water);
- const creek=new THREE.Shape();creek.moveTo(100,143);creek.bezierCurveTo(91,87,102,50,101,8);creek.bezierCurveTo(99,-30,101,-55,108,-78);creek.lineTo(117,-77);creek.bezierCurveTo(109,-32,112,1,111,35);creek.bezierCurveTo(108,82,107,112,112,143);creek.closePath();slab(creek,.12,.18,palette.water);
- const pond=new THREE.Shape();pond.absellipse(97,132,22,17,0,Math.PI*2);slab(pond,.14,.18,palette.water);
+ const river=new THREE.Shape();river.moveTo(-104,101);river.bezierCurveTo(-70,83,-32,99,15,84);river.bezierCurveTo(62,70,91,85,107,110);river.lineTo(115,109);river.bezierCurveTo(101,69,63,57,14,71);river.bezierCurveTo(-31,87,-73,70,-104,87);river.closePath();
+ const creek=new THREE.Shape();creek.moveTo(100,143);creek.bezierCurveTo(91,87,102,50,101,8);creek.bezierCurveTo(99,-30,101,-55,108,-78);creek.lineTo(117,-77);creek.bezierCurveTo(109,-32,112,1,111,35);creek.bezierCurveTo(108,82,107,112,112,143);creek.closePath();
+ const pond=new THREE.Shape();pond.absellipse(97,132,22,17,0,Math.PI*2);const water=createFlowingWater([river,creek,pond]);scene.add(water.group);
  // Plazas, garden edges and the detached northern group podium.
  slab(worldShape(33,130,12,-92,9),.15,.15,palette.pave);
  slab(worldShape(89,27,9,-14,-111),.25,1.3,palette.pave);
@@ -100,16 +101,7 @@ export function buildCampus(scene,{buildingMeshes,buildingGroups}){
  // Entry canopy and road crossings facing Jingbin Road.
  slab(worldShape(19,24,4,-91,-18),5.7,.7,palette.band);block(.5,5.7,.5,-99,2.85,-27,palette.wall);block(.5,5.7,.5,-99,2.85,-9,palette.wall);
  for(let i=0;i<8;i++){block(12,.06,.8,-114,.24,-24+i*2,palette.path);block(.8,.06,12,-88+i*2,.24,100,palette.path);}
- // Trees are instanced for stable performance, even in the expanded model view.
- const treePositions=[];const addTree=(x,z,s=1,y=0)=>treePositions.push([x,y,z,s]);
- for(let z=-152;z<=93;z+=9){addTree(-126,z,.9);addTree(-103,z,.72);addTree(129,z,.8);}
- for(let x=-93;x<108;x+=9){addTree(x,89,.8);addTree(x,-151,.85);}
- for(let x=-86;x<85;x+=10){addTree(x,-73,.75);addTree(x,-101,.65);}
- for(let z of [-37,2,41])for(let dx of [-10,10])for(let dz of [-8,8])addTree(-7+dx,z+dz,.58,1);
- for(let i=0;i<6;i++){addTree(40+i*8,79,.65);addTree(-72+i*11,-145,.6);}
- const leafGeo=new THREE.IcosahedronGeometry(1.8,1),trunkGeo=new THREE.CylinderGeometry(.23,.36,2.5,5);
- const leaves=new THREE.InstancedMesh(leafGeo,solid(0x387b68),treePositions.length),trunks=new THREE.InstancedMesh(trunkGeo,solid(0x66756c),treePositions.length),dummy=new THREE.Object3D();
- treePositions.forEach(([x,y,z,s],i)=>{dummy.position.set(x,y+3*s,z);dummy.scale.set(s,s*1.6,s);dummy.updateMatrix();leaves.setMatrixAt(i,dummy.matrix);dummy.position.set(x,y+1.2*s,z);dummy.scale.set(s,s,s);dummy.updateMatrix();trunks.setMatrixAt(i,dummy.matrix);});scene.add(leaves,trunks);
+ const landscape=addLandscape(scene,buildingMeshes,[river,creek,pond]);
  // Surface parking, parked vehicles, and subtle street lighting.
  const carMat=solid(0x9db7c1,.4,.35);let cars=[];
  for(let i=0;i<10;i++){const z=-40+i*9;line([[98,.25,z],[106,.25,z],[106,.25,z+6]],0x7f999e,.6);if(i%3)cars.push([102,z+3]);}
@@ -118,6 +110,8 @@ export function buildCampus(scene,{buildingMeshes,buildingGroups}){
  for(let z=-137;z<94;z+=30){block(.25,5,.25,-103,2.5,z,palette.wall);const lamp=new THREE.Mesh(new THREE.SphereGeometry(.4,6,6),new THREE.MeshBasicMaterial({color:0xa1e9ed}));lamp.position.set(-103,5,z);scene.add(lamp);}
  function applyAppearance(){for(const item of colored){if(!item.normal)item.normal=item.original.clone();if(planColor&&!item.tint){item.tint=item.original.clone();item.tint.color.setHex(item.color);item.tint.metalness=.1;item.tint.roughness=.65;item.tint.emissive.setHex(item.color);item.tint.emissiveIntensity=.12;}const m=planColor?item.tint:item.normal;m.wireframe=wire;m.transparent=wire;m.opacity=wire?.5:1;item.m.material=m;}}
  return {
+  update(seconds){water.update(seconds);},
+  landscape,
   setPlanColors(enabled){planColor=enabled;applyAppearance();},
   setWireframe(enabled){wire=enabled;applyAppearance();}
  };
