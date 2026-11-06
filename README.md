@@ -70,4 +70,8 @@
 
 ## AI 指挥决策台（dist/agent/）
 
-在同一套三维底座上叠加的「AI 预警 + 院长决策 + 危化品台账 + 场景能力」演示页，访问 `/agent/`（`npm run dev` 后 http://localhost:5174/agent/ ）。三维交互与驾驶舱一致并复用全部模块；改动 `dist/agent/src/campus3d.js` 后执行 `npm run build:agent` 重新打包。说明见 `dist/agent/README.md`。
+在同一套三维底座上叠加的「AI 预警 + 院长决策 + 危化品台账」演示页，访问 `/agent/`（`npm run dev` 后 http://localhost:5174/agent/ ）。三维交互与驾驶舱一致并复用全部模块；改动 `dist/agent/src/campus3d.js` 后执行 `npm run build:agent` 重新打包。说明见 `dist/agent/README.md`。
+
+### 场景入口
+
+默认首页和「总览」保留原驾驶舱（安全态势、三列布局、模型、视频、巡更、消防与动效）。顶部场景导航进入 `agent/#sec`（安保指挥）、`agent/#dec`（院长决策）、`agent/#hz`（危化品台账）。各场景可点击「总览」返回；直接访问 `/agent/` 也返回总览。

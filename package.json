@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "python3 -m http.server 5174 --directory dist",
-    "check": "node --check dist/app.js && node --check dist/campus-model.js && node --check dist/floor-browser.js && node --check dist/floor-interior.js && node --check dist/landscape.js && node --check dist/parking.js && node --check dist/ui-effects.js && node --check dist/transitions.js && node --check dist/safety-index.js && node --check dist/safety-panel.js && node --check dist/screen-layout.js && node --check dist/agent/src/campus3d.js",
+    "check": "node --check dist/app.js && node --check dist/campus-model.js && node --check dist/floor-browser.js && node --check dist/floor-interior.js && node --check dist/landscape.js && node --check dist/parking.js && node --check dist/ui-effects.js && node --check dist/transitions.js && node --check dist/safety-index.js && node --check dist/safety-panel.js && node --check dist/screen-layout.js && node --check dist/agent/src/campus3d.js && node --check dist/scene-navigation.js",
     "test": "node tests/interaction.test.mjs && node tests/floors.test.mjs && node tests/parking.test.mjs && node tests/transitions.test.mjs && node tests/safety-index.test.mjs && node tests/agent.test.mjs",
     "build:agent": "npx --yes esbuild@0.24.0 dist/agent/src/campus3d.js --bundle --format=iife --global-name=Campus3D --alias:three=./dist/vendor/three.module.js --minify --log-level=warning --outfile=dist/agent/campus3d.bundle.js"
   },

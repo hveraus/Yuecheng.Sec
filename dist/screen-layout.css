@@ -61,3 +61,8 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#070d18}
 .app .alerts .alarm-item .alarm-actions{position:absolute;right:0;top:19px;margin:0}
 .app .alerts .alarm-actions>span{display:none}
 .app .alerts .alarm-actions button{padding:3px 7px}
+
+/* Scene navigation shares the fixed design canvas with the original tools. */
+.app .navlinks{width:auto;flex-shrink:0;gap:3px}
+.app .navlinks .navitem{display:flex;align-items:center;justify-content:center;min-width:88px;padding:0 13px;text-decoration:none;font-size:12px}
+.scene-nav-divider{width:1px;background:#8ca1bc33;margin:5px 8px}

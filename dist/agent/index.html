@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#080d17">
 <title>越城院区 · 安防 AI 指挥决策台</title>
+<script>if(!location.hash||['#overview','#cap'].includes(location.hash))location.replace(new URL('../index.html',location.href));</script>
 <style>
 /* 视觉语言对齐同事版驾驶舱（Yuecheng.Sec theme.css）：石墨玻璃、薄荷青主色、紫蓝辅光、DIN 数字 */
 :root{
@@ -48,7 +49,7 @@ button:disabled{opacity:.5;cursor:default}
 /* ===== 导航行（对齐 .nav / .navlinks / .navitem） ===== */
 .nav{height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 4px;margin:8px 0 10px}
 .navlinks{height:42px;display:flex;gap:4px;padding:4px;background:#111b2b;border:1px solid #ffffff0d;border-radius:13px;box-shadow:inset 0 1px #ffffff05,0 7px 20px #0002}
-.navitem{border-radius:9px;min-width:118px;padding:0 16px;font-size:12px;color:#97a8c1;letter-spacing:.4px;display:flex;align-items:center;justify-content:center;gap:7px;border:0}
+.navitem{text-decoration:none;border-radius:9px;min-width:100px;padding:0 16px;font-size:12px;color:#97a8c1;letter-spacing:.4px;display:flex;align-items:center;justify-content:center;gap:7px;border:0}
 .navitem:hover{color:#f2ffff;border-color:transparent}
 .navitem.active{color:#072c2c;background:linear-gradient(115deg,#b1ffdf,#75d7db);box-shadow:inset 0 1px #fff9,0 3px 12px #53d9bb2b;font-weight:650}
 .navitem.active:hover{color:#082a2b}
@@ -67,7 +68,6 @@ main.on{display:grid}
 #v-sec{grid-template-columns:450px 1fr 420px;gap:14px}
 #v-dec{grid-template-columns:470px 1fr 470px;gap:14px}
 #v-hz{grid-template-columns:430px 1fr 460px;gap:14px}
-#v-cap{grid-template-rows:1fr 176px;gap:14px}
 .col{display:flex;flex-direction:column;gap:14px;min-height:0}
 
 /* ===== 面板（对齐 .panel：玻璃渐变、顶部高光线、鼠标高光） ===== */
@@ -411,30 +411,6 @@ table.hz td small{color:#8c9cb3}
 .dact2 button.p{background:linear-gradient(120deg,#294e55,#283f5d);color:#b8f6df}
 .dact2 button:hover{box-shadow:0 0 16px #84c4e626}
 
-/* ===== 场景能力 ===== */
-.capwrap{position:relative;display:grid;grid-template-columns:1fr 1fr 1.15fr;gap:100px;padding:4px 24px;flex:1;min-height:0}
-.capwrap svg.lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.capwrap svg.lines path{fill:none;stroke:#7086ac3a;stroke-width:1.3}
-.capwrap svg.lines path.hl{stroke:#75f4d2;stroke-width:2;filter:drop-shadow(0 0 4px #75f4d288)}
-.ccol{display:flex;flex-direction:column;gap:6px;justify-content:center}
-.ccol h4{font-size:10.5px;color:#8b9bb7;letter-spacing:2px;text-align:center;margin-bottom:2px;font-weight:500}
-.cc{border:1px solid #93a9c52b;border-radius:10px;padding:7px 12px;background:linear-gradient(140deg,#293950,#192a40);cursor:pointer;transition:.2s;color:#d8e8f4;box-shadow:inset 0 1px #ffffff0d}
-.cc:hover,.cc.hl{border-color:#9ee8d2;background:linear-gradient(140deg,#2d4a55,#243a58);color:#eafff8}
-.cc b{font-size:12.5px;display:flex;align-items:center;gap:6px;font-weight:550}
-.cc b span{margin-left:auto;display:flex;gap:4px}
-.cc small{font-size:10.5px;color:#94a7bf;display:block;margin-top:2px;line-height:1.4}
-.ph2{font-size:9.5px;padding:1px 6px;border-radius:4px;white-space:nowrap;border:1px solid;font-weight:500}
-.p1{background:#5be1a60d;color:#8becbc;border-color:#5be1a62b}.p2{background:#75f4d210;color:#b5ffe7;border-color:#75f4d235}.p3{background:#8d72de17;color:#c7b9ff;border-color:#9d8ef24d}
-.bg1{background:#8296ff0d;color:#aab9f7;border-color:#8b9eec35}.bg2{background:#dd754b15;color:#ffbd9e;border-color:#ffad7d40}.bg3{background:#ff7f8714;color:#ffa3af;border-color:#ff98a431}
-.road-map{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
-.rm{border:1px solid var(--line);border-radius:14px;padding:12px 16px;background:radial-gradient(ellipse at 5% 0%,#2e415745,transparent 60%),linear-gradient(140deg,#182336e8,#0c1525ee);position:relative;box-shadow:inset 0 1px #e5f0ff0d,0 12px 27px #00000032}
-.rm h5{font-size:13.5px;display:flex;align-items:center;gap:8px;margin-bottom:6px;font-weight:550;color:#e1eaf9}
-.rm li{list-style:none;font-size:12px;color:#c2d0e2;line-height:1.6;padding-left:12px;position:relative}
-.rm li::before{content:"";position:absolute;left:0;top:9px;width:4px;height:4px;border-radius:50%;background:#86e6c5}
-.rm .kpi2{position:absolute;right:14px;top:12px;font-size:10.5px;color:#8c9cb3;text-align:right;line-height:1.5}
-.rm .kpi2 b{color:#b5ffe7;font-family:var(--num);font-size:16px}
-.rm.cons li::before{background:var(--org)}
-
 /* ===== 抽屉（对齐 .modal） ===== */
 #drawer{position:absolute;right:-560px;top:0;width:540px;height:100%;background:radial-gradient(ellipse at top right,#40366045,transparent 60%),linear-gradient(145deg,#1c2b40,#101a2d);border-left:1px solid #829bb54d;box-shadow:inset 0 1px #fff2,-30px 0 100px #0008;transition:right .35s ease;padding:18px 20px;display:flex;flex-direction:column;gap:12px;z-index:50}
 #drawer.on{right:0}
@@ -474,6 +450,7 @@ footer .sep{margin:0 8px;color:#3d4b66}
 @keyframes sculpture-float{0%,100%{transform:perspective(180px) rotateY(-20deg) translateY(0)}50%{transform:perspective(180px) rotateY(10deg) translateY(-5px)}}
 @keyframes panel-reveal{from{opacity:0;translate:0 10px}to{opacity:1;translate:0 0}}
 </style>
+<link rel="stylesheet" href="../scene-layout.css">
 </head>
 <body>
 <div id="stage">
@@ -492,10 +469,14 @@ footer .sep{margin:0 8px;color:#3d4b66}
 </header>
 <nav class="nav">
   <div class="navlinks">
+    <a class="navitem" href="../index.html" style="text-decoration:none">总览</a>
     <button class="navitem active" data-v="sec">安保指挥 <b id="tab-badge">6</b></button>
     <button class="navitem" data-v="dec">院长决策</button>
     <button class="navitem" data-v="hz">危化品台账 <b class="o" id="hz-badge">3</b></button>
-    <button class="navitem" data-v="cap">场景能力</button>
+    <span class="scene-nav-divider" aria-hidden="true" style="width:1px;background:#8ca1bc33;margin:5px 8px"></span>
+    <a class="navitem" href="../index.html#video">视频监控</a>
+    <a class="navitem" href="../index.html#patrol">智慧巡更</a>
+    <a class="navitem" href="../index.html#fire">消防安全</a>
   </div>
   <div class="navmeta">
     <button class="demo-btn" id="demo">▶ 演示：医闹处置闭环</button>
@@ -647,25 +628,6 @@ footer .sep{margin:0 8px;color:#3d4b66}
       <div class="scroll" style="flex:1" id="hzevents"></div>
       <div class="dact2"><button class="p" onclick="toast('已生成本月危化品台账与开柜录像索引（PDF + 视频片段清单）','grn')">◎ 公安检查 · 一键导出</button><button onclick="toast('盘点任务已下发科室安全员','cy')">▤ 发起月末盘点</button></div>
     </div>
-  </div>
-</main>
-
-<!-- ============ 场景能力 ============ -->
-<main id="v-cap">
-  <div class="panel">
-    <div class="ph"><h3>现有设备 → AI 能力 → 应用场景 <span class="tag grn">不换现有设备 · 只做增量</span> <span class="tag">预算档位按院方采购分档示意：≤10 万 / 10~30 万 / ≥30 万</span></h3><small><em>CAPABILITY MAP</em>点任一场景，高亮它依赖的设备与能力</small></div>
-    <div class="capwrap" id="capwrap">
-      <svg class="lines" id="caplines"></svg>
-      <div class="ccol" id="c-dev"><h4>现有设备 / 数据（在其上增量）</h4></div>
-      <div class="ccol" id="c-ai"><h4>AI 能力（边缘盒 + 本地算力 / 云 token）</h4></div>
-      <div class="ccol" id="c-sc"><h4>应用场景 · 阶段 · 预算档位 · 工期</h4></div>
-    </div>
-  </div>
-  <div class="road-map">
-    <div class="rm"><h5><span class="tag grn">一期 · 0–3 月</span>先出亮点</h5><div class="kpi2">目标<br><b>误报 ≤10%</b> · 闭环 ≤10 min</div><ul><li>危化品电子台账 + 开柜录像自动绑定（最快见效）</li><li>布控增强：人脸 + 步态 + 衣着，命中分级派人</li><li>医闹分级预警、停车分流引导、SOS / 手报接入闭环</li></ul></div>
-    <div class="rm"><h5><span class="tag cy">二期 · 3–6 月</span>闭环与决策</h5><div class="kpi2">目标<br><b>晨报采纳率 ≥60%</b></div><ul><li>保安 App 一键派单、到场打卡、取证归档</li><li>地下出入口"软安检"、消防管网感知</li><li>院长 AI 晨报、风险指数、交通 / 人流日报</li></ul></div>
-    <div class="rm"><h5><span class="tag ai">三期 · 6–12 月</span>合并与推广</h5><div class="kpi2">目标<br><b>一院多区</b> 统一指挥</div><ul><li>新院区接入同一套 Agent</li><li>敏感数据本地算力盒，非敏感走云端 token</li><li>模型与指标复制到总院及其他院区</li></ul></div>
-    <div class="rm cons"><h5><span class="tag org">硬约束</span>方案边界</h5><ul><li>现有设备不替换，只做接口对接与局部增加</li><li>不碰 HIS 医生端打标，诊室不录音</li><li>每个场景独立成册：方案 + 预算 + 工期，院方按采购档位自选</li><li>越城院区试点，各院区垂直管理同一思路</li></ul></div>
   </div>
 </main>
 
@@ -1024,42 +986,9 @@ function renderHz(){
 }
 function hzPick(i){hzSel=i;renderHz()}
 
-/* ---------- capability view ---------- */
-const DEV=[['视频监控（约 800 路）','门诊 / 急诊 / 病区 / 天台 / 外立面 / 地库电梯厅'],['人脸布控 · 省级库 + 院内名单','省级涉医风险库 + 院方研判名单，口罩帽子场景识别率偏低'],['门禁 · 门磁 · 危化品柜','天台、设备间、药房、ICU、防爆/防腐柜'],['车位引导系统 · 道闸 · 立体车库','900+ 车位，立体上层电车不可用'],['手报 · SOS · 消防主机','SOS 仅接监控室闭路，消防只有水箱液位'],['业务系统','集中采购、医务科纠纷登记、投诉系统（不碰 HIS）']];
-const AIC=[['人形 / 行为 / 姿态识别','滞留、攀爬、聚集、跌倒、横幅'],['多特征人员追踪','人脸 + 步态 + 衣着 + 轨迹，口罩帽子也能跟'],['声压 / 情绪识别','分贝阈值 + 激动情绪（拾音器二期补装）'],['车辆特征 + 时序预测','车型 / 电车识别、饱和预测、按车牌点名引导'],['物体 / 事件检测','抛物、通道占用、开柜事件、压力异常'],['大模型 Agent','多源合判、分级派单、晨报、台账对账、手机联动']];
-const SCN=[
- ['危化品电子台账 + 开柜录像绑定','p1','bg1','≤10 万 · 6 周',[2,5],[4,5]],
- ['布控增强 · 特征追踪 · 分级派人','p1','bg2','10~30 万 · 8 周',[0,1],[1,5]],
- ['医闹分级预警与提前布控','p1','bg2','10~30 万 · 8 周',[0,1,4,5],[0,1,2,5]],
- ['停车分流引导 + 交通日报','p1','bg2','10~30 万 · 6 周',[3],[3,5]],
- ['SOS / 手报 / 通道接入处置闭环','p1','bg1','≤10 万 · 4 周',[0,4],[4,5]],
- ['高空滞留 / 坠落风险','p1','bg1','≤10 万 · 4 周',[0,2],[0,5]],
- ['地下多个出入口"软安检"','p2','bg3','≥30 万 · 12 周',[0,1],[1,0]],
- ['消防管网感知 + 高空抛物','p2','bg2','10~30 万 · 10 周',[4,0],[4]],
- ['院长决策晨报 · 多院区统一指挥','p2','bg2','10~30 万 · 8 周',[5,3,1],[5]],
-];
-function renderCap(){
-  const mk=(c,arr)=>{arr.forEach((d,i)=>{const e=el('div','cc');e.dataset.i=i;e.innerHTML=`<b>${d[0]}</b><small>${d[1]}</small>`;c.appendChild(e)})};
-  mk($('#c-dev'),DEV);mk($('#c-ai'),AIC);
-  SCN.forEach((s,i)=>{const e=el('div','cc');e.dataset.i=i;e.innerHTML=`<b>${s[0]}<span><span class="ph2 ${s[1]}">${s[1]==='p1'?'一期':'二期'}</span><span class="ph2 ${s[2]}">${s[3]}</span></span></b><small>依赖 ${s[4].length} 类设备 · ${s[5].length} 项能力</small>`;e.onclick=()=>hl(i);$('#c-sc').appendChild(e)});
-  requestAnimationFrame(()=>drawLines());
-}
-let hlIdx=0;
-function drawLines(){
-  const wrap=$('#capwrap'),svg=$('#caplines');if(!wrap.offsetWidth)return;const R=wrap.getBoundingClientRect();const sc=R.width/wrap.offsetWidth;
-  const pos=(sel,i,side)=>{const e=$$(sel)[i];const r=e.getBoundingClientRect();return {x:(side==='r'?r.right:r.left)/sc-R.left/sc,y:(r.top+r.height/2)/sc-R.top/sc}};
-  let h='';
-  SCN.forEach((s,i)=>{const on=i===hlIdx;s[5].forEach(a=>{s[4].forEach(d=>{if(!on&&s[5].indexOf(a)>0)return;const p1=pos('#c-dev .cc',d,'r'),p2=pos('#c-ai .cc',a,'l');h+=`<path class="${on?'hl':''}" d="M${p1.x} ${p1.y} C${p1.x+60} ${p1.y} ${p2.x-60} ${p2.y} ${p2.x} ${p2.y}"/>`});const p2=pos('#c-ai .cc',a,'r'),p3=pos('#c-sc .cc',i,'l');h+=`<path class="${on?'hl':''}" d="M${p2.x} ${p2.y} C${p2.x+60} ${p2.y} ${p3.x-60} ${p3.y} ${p3.x} ${p3.y}"/>`})});
-  svg.innerHTML=h;
-  $$('#c-sc .cc').forEach((e,i)=>e.classList.toggle('hl',i===hlIdx));
-  $$('#c-dev .cc').forEach((e,i)=>e.classList.toggle('hl',SCN[hlIdx][4].includes(i)));
-  $$('#c-ai .cc').forEach((e,i)=>e.classList.toggle('hl',SCN[hlIdx][5].includes(i)));
-}
-function hl(i){hlIdx=i;drawLines()}
-
 /* ---------- views ---------- */
-function switchView(v){$$('.navitem').forEach(b=>b.classList.toggle('active',b.dataset.v===v));$$('main').forEach(m=>m.classList.toggle('on',m.id==='v-'+v));if(v==='cap')setTimeout(drawLines,30);if(v==='dec'&&!$('#flu svg')){renderFlu();renderFactors()}if(c3d){if(v==='sec'&&!$('#map').classList.contains('flat'))c3d.resume();else c3d.pause();}}
-$$('.navitem').forEach(b=>b.onclick=()=>switchView(b.dataset.v));
+function switchView(v){history.replaceState(null,'','#'+v);$$('.navitem').forEach(b=>b.classList.toggle('active',b.dataset.v===v));$$('main').forEach(m=>m.classList.toggle('on',m.id==='v-'+v));if(v==='dec'&&!$('#flu svg')){renderFlu();renderFactors()}if(c3d){if(v==='sec'&&!$('#map').classList.contains('flat'))c3d.resume();else c3d.pause();}}
+$$('.navitem[data-v]').forEach(b=>b.onclick=()=>switchView(b.dataset.v));
 
 /* ---------- live injection ---------- */
 const LIVE=[{type:'park',lv:1,title:'急诊临时车位将满',bld:'PS',loc:'地面 · 急诊临时停车',ai:'急诊临时车位 44/46，预计 12 分钟后满位，建议提前诱导。',conf:.8,src:['车位检测器','道闸'],ev:[['急诊临时 · 44/46','10%,30%,70%,50%'],['入口排队 2 车','20%,30%,50%,40%']],why:['占用 ≥ 95%'],do:['入口诱导至地面东侧'],},
@@ -1068,9 +997,9 @@ let li=0;
 setInterval(()=>{if(li>=LIVE.length)return;const b=LIVE[li++];const a={id:nextAlertId(),t:now(),st:'pending',fresh:true,tl:[['发现',now(),'AI'],['研判',now(),'置信 '+Math.round(b.conf*100)+'%'],['派单','','—'],['到场','','—'],['闭环','','—']],cur:2,...b};alerts.unshift(a);renderAlerts();renderMap();toast('新预警：'+a.title+' · '+a.loc,a.lv===2?'org':'cy')},38000);
 
 /* ---------- init ---------- */
-fit();init3D();renderAlerts();renderMap();renderTL();renderScenes();renderSugs();renderSignals();renderHz();renderCap();
-/* 支持 #sec / #dec / #hz / #cap 直接打开某个视图；#parking 直接进地库；#floor-b5 直接展开 5 号楼，便于演示与截图 */
-{const h=location.hash.slice(1);if(['sec','dec','hz','cap'].includes(h))switchView(h);
+fit();init3D();renderAlerts();renderMap();renderTL();renderScenes();renderSugs();renderSignals();renderHz();
+/* 支持 #sec / #dec / #hz 直接打开某个视图；#parking 直接进地库；#floor-b5 直接展开 5 号楼，便于演示与截图 */
+{const h=location.hash.slice(1);if(['sec','dec','hz'].includes(h))switchView(h);
  else if(c3d&&h==='parking'){switchView('sec');setTimeout(()=>c3d.enterParking(),600);}
  else if(c3d&&h.startsWith('floor-')){switchView('sec');const b=c3d.buildings.find(x=>x.id===h.slice(6));if(b)setTimeout(()=>c3d.enterBuilding(b),600);}}
 </script>

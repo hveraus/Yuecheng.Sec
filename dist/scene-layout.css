@@ -1,0 +1,21 @@
+/* Shared 1920 × 1080 frame: keep every scene on the overview grid. */
+:root{--scene-header:88px;--scene-nav:58px;--scene-footer:32px;--scene-left:370px;--scene-right:390px;--scene-gap:15px;--scene-columns:var(--scene-left) minmax(0,1fr) var(--scene-right)}
+.app,#stage{display:grid;grid-template-rows:var(--scene-header) var(--scene-nav) minmax(0,1fr) var(--scene-footer);padding:0}
+.app .header,#stage .hdr{height:var(--scene-header);min-height:0;margin:0;padding:0 28px;border-radius:0;border-width:0 0 1px}
+.app .heading>span,#stage .heading>span{font-size:25px;line-height:32px;letter-spacing:2px}
+.app .heading small,#stage .heading small{font-size:8px;line-height:12px;letter-spacing:3px;margin-top:4px}
+.app .nav,#stage .nav{height:var(--scene-nav);min-height:0;margin:0;padding:0 28px;gap:16px}
+.app .navlinks,#stage .navlinks{height:42px;gap:3px;padding:4px;flex-shrink:0;width:auto}
+.app .navlinks .navitem,#stage .navlinks .navitem{min-width:100px;padding:0 13px;font-size:12px;line-height:normal;text-decoration:none}
+.app .dashboard,#stage main{grid-row:3;min-height:0;min-width:0;margin:0;padding:10px 22px 12px;gap:var(--scene-gap);overflow:hidden}
+.app .dashboard,#stage #v-sec,#stage #v-dec,#stage #v-hz{grid-template-columns:var(--scene-columns)}
+#stage .col{gap:12px;min-width:0}
+#stage .panel{padding:12px 16px;min-width:0;overflow:hidden}
+.app .panel-heading,#stage .ph{min-height:24px;margin-bottom:10px;gap:8px;flex-shrink:0}
+#stage .ph h3{white-space:normal;min-width:0}
+#stage .ph small{min-width:0}
+.app footer,#stage footer{grid-row:4;height:var(--scene-footer);min-height:0;margin:0;padding:6px 22px;display:flex;align-items:center;justify-content:space-between;line-height:normal}
+.app .panel-heading,#stage .ph{height:24px}
+#stage .ph h3{white-space:nowrap;flex-shrink:0;font-size:13px}
+#stage .ph small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:45%}
+#stage .ph h3 .tag{font-size:9px}

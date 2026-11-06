@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="zh-CN">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#07111d"><title>越城院区 · 智慧安保驾驶舱</title><link rel="stylesheet" href="style.css?v=prism-2"><link rel="stylesheet" href="theme.css?v=prism-2"><link rel="stylesheet" href="safety-index.css"><link rel="stylesheet" href="operations.css"><link rel="stylesheet" href="screen-layout.css"><script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#07111d"><title>越城院区 · 智慧安保驾驶舱</title><link rel="stylesheet" href="style.css?v=prism-2"><link rel="stylesheet" href="theme.css?v=prism-2"><link rel="stylesheet" href="safety-index.css"><link rel="stylesheet" href="operations.css"><link rel="stylesheet" href="screen-layout.css"><link rel="stylesheet" href="scene-layout.css"><script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script></head>
 <body>
 <div class="app">
 <header class="header"><div class="brand"><div class="brandmark">✚</div><div><strong>浙江省人民医院</strong><small>ZHEJIANG PROVINCIAL PEOPLE'S HOSPITAL</small></div><span class="campus">越城院区</span></div><div class="heading"><span>安保 · 数字指挥中心</span><small>YUECHENG / SECURITY OPERATIONS</small></div><div class="headright"><span class="online-dot"></span>系统运行正常<span class="head-divider"></span><div><b id="clock">11:48:00</b><small id="date">2026.11.05 星期四</small></div><button class="icon-button" id="fullscreen" title="全屏显示" aria-label="全屏显示">⛶</button></div></header>
-<nav class="nav"><div class="navlinks"><button class="navitem active" data-nav="overview">综合态势</button><button class="navitem" data-nav="video">视频监控</button><button class="navitem" data-nav="patrol">智慧巡更</button><button class="navitem" data-nav="fire">消防安全</button></div><div class="navmeta"><button id="motionToggle" class="motion-toggle" aria-pressed="true">◌ 动效开启</button><span class="demo-tag">DEMO</span>数字孪生演示环境<span class="weather">绍兴 · 越城 <span>22°C</span></span></div></nav>
+<nav class="nav"><div class="navlinks"><button class="navitem active" data-nav="overview" aria-current="page">总览</button><a class="navitem" href="agent/#sec">安保指挥</a><a class="navitem" href="agent/#dec">院长决策</a><a class="navitem" href="agent/#hz">危化品台账</a><span class="scene-nav-divider" aria-hidden="true"></span><button class="navitem" data-nav="video">视频监控</button><button class="navitem" data-nav="patrol">智慧巡更</button><button class="navitem" data-nav="fire">消防安全</button></div><div class="navmeta"><button id="motionToggle" class="motion-toggle" aria-pressed="true">◌ 动效开启</button><span class="demo-tag">DEMO</span>数字孪生演示环境<span class="weather">绍兴 · 越城 <span>22°C</span></span></div></nav>
 <main class="dashboard">
 <aside class="left-col">
 <section id="safetyIndex" class="safety-index" aria-label="院区安全态势指数"><div class="mini-metrics index-overview-metrics"><div><span>今日事件</span><b>12<small>起</small></b></div><div><span>已处置</span><b id="resolvedCount">09<small>起</small></b></div><div><span>响应中位数</span><b>4<small>分</small></b></div></div></section>
@@ -29,4 +29,5 @@
 <script type="module" src="screen-layout.js"></script>
 <script type="module" src="safety-panel.js"></script>
 <script type="module" src="app.js"></script>
+<script type="module" src="scene-navigation.js"></script>
 </body></html>
